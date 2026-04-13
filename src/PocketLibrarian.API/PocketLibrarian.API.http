@@ -1,0 +1,6 @@
+@PocketLibrarian.API_HostAddress = http://localhost:5047
+
+GET {{PocketLibrarian.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

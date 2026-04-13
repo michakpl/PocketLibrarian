@@ -1,0 +1,62 @@
+using Mediator;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Web;
+using PocketLibrarian.API.Endpoints.Books;
+using PocketLibrarian.API.Extensions;
+using PocketLibrarian.API.Middleware;
+using PocketLibrarian.Application.Abstractions;
+using PocketLibrarian.Application.Books.Queries.GetBooks;
+using PocketLibrarian.Infrastructure.Auth;
+using PocketLibrarian.Infrastructure.Auth.Providers;
+using PocketLibrarian.Infrastructure.Persistence;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddPocketLibrarianAuth(builder.Configuration, auth =>
+{
+    auth.AddProvider(new EntraIdAuthProvider());
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = options.DefaultPolicy;
+    options.AddPolicy("book.read", policy =>
+        policy.RequireAuthenticatedUser()
+              .RequireScope("book.read"));
+});
+builder.Services.AddRequiredScopeAuthorization();
+
+builder.Services.AddMediator((MediatorOptions options) =>
+{
+    options.Assemblies = [typeof(GetBooksQuery).Assembly];
+});
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<CurrentUserContext>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+// Add services to the container.
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddOpenApi();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
+
+app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseMiddleware<UserSynchronizationMiddleware>();
+
+var api = app.MapGroup("/api");
+api.MapGroup("/books").MapBooks();
+
+app.Run();

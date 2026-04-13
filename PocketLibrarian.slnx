@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="src/PocketLibrarian.API/PocketLibrarian.API.csproj" />
+  <Project Path="src/PocketLibrarian.Application/PocketLibrarian.Application.csproj" />
+  <Project Path="src/PocketLibrarian.Domain/PocketLibrarian.Domain.csproj" />
+  <Project Path="src/PocketLibrarian.Infrastructure/PocketLibrarian.Infrastructure.csproj" />
+</Solution>
