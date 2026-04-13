@@ -28,8 +28,7 @@ public sealed class GetBooksHandlerTests : IDisposable
 
         // Unresolved context → global query filter passes all rows (!IsAuthenticated = true)
         _userContext = new CurrentUserContext();
-        var ownerId = Guid.NewGuid();
-        _userContext.Resolve(ownerId, SampleIdentity());
+        _userContext.Resolve(Guid.NewGuid(), SampleIdentity());
         _db = new AppDbContext(options, _userContext);
         _handler = new GetBooksHandler(_db);
     }
