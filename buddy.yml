@@ -1,0 +1,18 @@
+- pipeline: "Test"
+  events:
+  - type: "PUSH"
+    refs:
+      - "refs/pull/*"
+      - "refs/heads/main"
+  actions:
+  - action: "Run .NET tests"
+    type: "BUILD"
+    docker_image_name: "mcr.microsoft.com/dotnet/sdk"
+    docker_image_tag: "10.0"
+    execute_commands:
+    - "dotnet restore"
+    - "dotnet build --no-restore --configuration Release"
+    - "dotnet test --no-build --configuration Release --verbosity normal tests/PocketLibrarian.UnitTests/PocketLibrarian.UnitTests.csproj"
+    cached_dirs:
+    - "/root/.nuget/packages"
+    shell: "BASH"

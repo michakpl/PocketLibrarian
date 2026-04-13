@@ -9,7 +9,7 @@ public static class AuthenticationExtensions
     {
         const string policyScheme = "PocketLibrarian";
 
-        var builder = new PocketLibrarianAuthBuilder(services, config);
+        var builder = new PocketLibrarianAuthBuilder();
         configure(builder);
 
         var providers = builder.Build();
@@ -60,7 +60,7 @@ public static class AuthenticationExtensions
     }
 }
 
-public sealed class PocketLibrarianAuthBuilder(IServiceCollection services, IConfiguration configuration)
+public sealed class PocketLibrarianAuthBuilder
 {
     private readonly List<IAuthProviderRegistration> _providers = [];
 

@@ -1,18 +1,19 @@
 using Mediator;
+using Microsoft.EntityFrameworkCore;
+using PocketLibrarian.Application.Abstractions;
 
 namespace PocketLibrarian.Application.Books.Queries.GetBooks;
 
-public sealed class GetBooksHandler : IQueryHandler<GetBooksQuery, IReadOnlyList<BookDto>>
+public sealed class GetBooksHandler(IApplicationDbContext db)
+    : IQueryHandler<GetBooksQuery, IReadOnlyList<BookDto>>
 {
-    public ValueTask<IReadOnlyList<BookDto>> Handle(GetBooksQuery query, CancellationToken cancellationToken)
+    public async ValueTask<IReadOnlyList<BookDto>> Handle(GetBooksQuery query, CancellationToken cancellationToken)
     {
-        // Dummy data — replace with real EF Core query once the Books entity is added
-        IReadOnlyList<BookDto> books =
-        [
-            new BookDto(Guid.NewGuid(), query.OwnerId, "The Pragmatic Programmer", "David Thomas", "9780135957059"),
-            new BookDto(Guid.NewGuid(), query.OwnerId, "Clean Architecture", "Robert C. Martin", "9780134494166"),
-        ];
+        var books = await db.Books
+            .Where(b => b.OwnerId == query.OwnerId)
+            .Select(b => new BookDto(b.Id, b.OwnerId, b.Title, b.Author, b.Isbn, b.LocationId))
+            .ToListAsync(cancellationToken);
 
-        return ValueTask.FromResult(books);
+        return books;
     }
 }

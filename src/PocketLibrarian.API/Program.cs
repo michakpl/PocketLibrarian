@@ -2,6 +2,7 @@ using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using PocketLibrarian.API.Endpoints.Books;
+using PocketLibrarian.API.Endpoints.Locations;
 using PocketLibrarian.API.Extensions;
 using PocketLibrarian.API.Middleware;
 using PocketLibrarian.Application.Abstractions;
@@ -11,6 +12,11 @@ using PocketLibrarian.Infrastructure.Auth.Providers;
 using PocketLibrarian.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 
 builder.Services.AddPocketLibrarianAuth(builder.Configuration, auth =>
 {
@@ -23,16 +29,23 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("book.read", policy =>
         policy.RequireAuthenticatedUser()
               .RequireScope("book.read"));
+    options.AddPolicy("book.write", policy =>
+        policy.RequireAuthenticatedUser()
+              .RequireScope("book.write"));
+    options.AddPolicy("location.read", policy =>
+        policy.RequireAuthenticatedUser()
+              .RequireScope("location.read"));
+    options.AddPolicy("location.write", policy =>
+        policy.RequireAuthenticatedUser()
+              .RequireScope("location.write"));
 });
 builder.Services.AddRequiredScopeAuthorization();
 
 builder.Services.AddMediator((MediatorOptions options) =>
 {
     options.Assemblies = [typeof(GetBooksQuery).Assembly];
+    options.ServiceLifetime = ServiceLifetime.Scoped;
 });
-
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CurrentUserContext>();
@@ -58,5 +71,6 @@ app.UseMiddleware<UserSynchronizationMiddleware>();
 
 var api = app.MapGroup("/api");
 api.MapGroup("/books").MapBooks();
+api.MapGroup("/locations").MapLocations();
 
 app.Run();
