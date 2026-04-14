@@ -22,26 +22,24 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 
-builder.Services.AddPocketLibrarianAuth(builder.Configuration, auth =>
-{
-    auth.AddProvider(new EntraIdAuthProvider());
-});
+builder.Services.AddPocketLibrarianAuth(builder.Configuration,
+    auth => { auth.AddProvider(new EntraIdAuthProvider()); });
 
 builder.Services.AddAuthorization(options =>
 {
     options.FallbackPolicy = options.DefaultPolicy;
     options.AddPolicy("book.read", policy =>
         policy.RequireAuthenticatedUser()
-              .RequireScope("book.read"));
+            .RequireScope("book.read"));
     options.AddPolicy("book.write", policy =>
         policy.RequireAuthenticatedUser()
-              .RequireScope("book.write"));
+            .RequireScope("book.write"));
     options.AddPolicy("location.read", policy =>
         policy.RequireAuthenticatedUser()
-              .RequireScope("location.read"));
+            .RequireScope("location.read"));
     options.AddPolicy("location.write", policy =>
         policy.RequireAuthenticatedUser()
-              .RequireScope("location.write"));
+            .RequireScope("location.write"));
 });
 builder.Services.AddRequiredScopeAuthorization();
 
@@ -79,8 +77,8 @@ app.UseExceptionHandler(errorApp => errorApp.Run(async context =>
     var (status, title) = ex switch
     {
         ValidationException => (StatusCodes.Status400BadRequest, "Validation Failed"),
-        NotFoundException   => (StatusCodes.Status404NotFound,   "Not Found"),
-        _                   => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.")
+        NotFoundException => (StatusCodes.Status404NotFound, "Not Found"),
+        _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.")
     };
 
     context.Response.StatusCode = status;
@@ -89,8 +87,10 @@ app.UseExceptionHandler(errorApp => errorApp.Run(async context =>
     var problem = new ProblemDetails
     {
         Status = status,
-        Title  = title,
-        Detail = ex?.Message
+        Title = title,
+        Detail = status == StatusCodes.Status500InternalServerError && !app.Environment.IsDevelopment()
+            ? ex?.Message
+            : null
     };
 
     if (ex is ValidationException ve)

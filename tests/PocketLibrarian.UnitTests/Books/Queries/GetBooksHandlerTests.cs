@@ -26,7 +26,6 @@ public sealed class GetBooksHandlerTests : IDisposable
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
 
-        // Unresolved context → global query filter passes all rows (!IsAuthenticated = true)
         _userContext = new CurrentUserContext();
         _userContext.Resolve(Guid.NewGuid(), SampleIdentity());
         _db = new AppDbContext(options, _userContext);

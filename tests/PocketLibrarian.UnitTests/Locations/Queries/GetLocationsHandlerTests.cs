@@ -26,7 +26,6 @@ public sealed class GetLocationsHandlerTests : IDisposable
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
 
-        // Unresolved context — no global query filter on Locations
         var userContext = new CurrentUserContext();
         userContext.Resolve(_ownerId, SampleIdentity());
         _db = new AppDbContext(options, userContext);

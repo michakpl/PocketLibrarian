@@ -27,7 +27,6 @@ public sealed class AddLocationHandlerTests : IDisposable
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
 
-        // Unresolved context — no global query filter on Locations
         _userContext = new CurrentUserContext();
         _userContext.Resolve(Guid.NewGuid(), SampleIdentity());
         _db = new AppDbContext(options, _userContext);
@@ -102,7 +101,7 @@ public sealed class AddLocationHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task Handle_WithNonExistentParentId_ThrowsInvalidOperationException()
+    public async Task Handle_WithNonExistentParentId_ThrowsNotFoundException()
     {
         var command = new AddLocationCommand(_userContext.OwnerId, "Room", "A room", Guid.NewGuid());
 
@@ -111,7 +110,7 @@ public sealed class AddLocationHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task Handle_WithParentIdBelongingToDifferentOwner_ThrowsInvalidOperationException()
+    public async Task Handle_WithParentIdBelongingToDifferentOwner_ThrowsNotFoundException()
     {
         var differentOwnerId = Guid.NewGuid();
         var parent = Location.Create("Other Shelf", "Someone else's shelf", "OTHER", differentOwnerId);
