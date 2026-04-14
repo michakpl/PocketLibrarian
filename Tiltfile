@@ -31,7 +31,12 @@ dc_resource(
 )
 
 dc_resource(
+    'redis',
+    labels=['cache'],
+)
+
+dc_resource(
     'api',
     labels=['backend'],
-    resource_deps=['db'],
+    resource_deps=['db', 'redis'],
 )

@@ -3,4 +3,5 @@
   <Project Path="src/PocketLibrarian.Application/PocketLibrarian.Application.csproj" />
   <Project Path="src/PocketLibrarian.Domain/PocketLibrarian.Domain.csproj" />
   <Project Path="src/PocketLibrarian.Infrastructure/PocketLibrarian.Infrastructure.csproj" />
+  <Project Path="tests/PocketLibrarian.UnitTests/PocketLibrarian.UnitTests.csproj" />
 </Solution>

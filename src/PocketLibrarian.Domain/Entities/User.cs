@@ -2,7 +2,7 @@ namespace PocketLibrarian.Domain.Entities;
 
 public sealed class User
 {
-    public Guid Id { get; private set; }
+    public Guid Id { get; private init; }
 
     public string DisplayName { get; private set; } = string.Empty;
     public string Email { get; private set; } = string.Empty;

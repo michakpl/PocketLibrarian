@@ -6,10 +6,15 @@ namespace PocketLibrarian.Infrastructure.Persistence;
 
 public sealed class AppDbContext(
     DbContextOptions<AppDbContext> options,
-    CurrentUserContext currentUser) : DbContext(options)
+    CurrentUserContext currentUser) : DbContext(options), IApplicationDbContext
 {
+    private bool IsAuthenticated => currentUser.IsAuthenticated;
+    private Guid? CurrentOwnerId => currentUser.IsAuthenticated ? currentUser.OwnerId : null;
+
     public DbSet<User> Users => Set<User>();
     public DbSet<ExternalIdentity> ExternalIdentities => Set<ExternalIdentity>();
+    public DbSet<Book> Books => Set<Book>();
+    public DbSet<Location> Locations => Set<Location>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -40,6 +45,44 @@ public sealed class AppDbContext(
             e.Property(u => u.Email)
                 .IsRequired()
                 .HasMaxLength(256);
+        });
+
+        modelBuilder.Entity<Book>(e =>
+        {
+            e.HasKey(b => b.Id);
+            e.Property(b => b.Title)
+                .IsRequired()
+                .HasMaxLength(256);
+            e.Property(b => b.Author)
+                .IsRequired()
+                .HasMaxLength(256);
+            e.Property(b => b.Isbn)
+                .HasMaxLength(50);
+            e.HasOne(b => b.Owner)
+                .WithMany()
+                .HasForeignKey(b => b.OwnerId)
+                .OnDelete(DeleteBehavior.Cascade);
+            e.HasQueryFilter(b => IsAuthenticated && b.OwnerId == CurrentOwnerId);
+        });
+
+        modelBuilder.Entity<Location>(e =>
+        {
+            e.HasKey(l => l.Id);
+            e.Property(l => l.Name)
+                .IsRequired()
+                .HasMaxLength(256);
+            e.Property(l => l.Code)
+                .IsRequired()
+                .HasMaxLength(50);
+            e.HasOne(l => l.Parent)
+                .WithMany()
+                .HasForeignKey(l => l.ParentId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(l => l.Owner)
+                .WithMany()
+                .HasForeignKey(l => l.OwnerId)
+                .OnDelete(DeleteBehavior.Cascade);
+            e.HasQueryFilter(l => IsAuthenticated && l.OwnerId == CurrentOwnerId);
         });
     }
 }
