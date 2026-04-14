@@ -12,6 +12,14 @@ public sealed class GetLocationsHandlerTests : IDisposable
     private readonly GetLocationsHandler _handler;
     private readonly Guid _ownerId = Guid.NewGuid();
 
+    private static UserIdentity SampleIdentity() => new()
+    {
+        Provider = "EntraId",
+        ProviderId = "oid-123",
+        DisplayName = "Test User",
+        Email = "test@example.com"
+    };
+
     public GetLocationsHandlerTests()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -19,7 +27,9 @@ public sealed class GetLocationsHandlerTests : IDisposable
             .Options;
 
         // Unresolved context — no global query filter on Locations
-        _db = new AppDbContext(options, new CurrentUserContext());
+        var userContext = new CurrentUserContext();
+        userContext.Resolve(_ownerId, SampleIdentity());
+        _db = new AppDbContext(options, userContext);
         _handler = new GetLocationsHandler(_db);
     }
 

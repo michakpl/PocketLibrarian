@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PocketLibrarian.Application.Abstractions;
+using PocketLibrarian.Application.Exceptions;
 using PocketLibrarian.Application.Locations.Commands.AddLocation;
 using PocketLibrarian.Domain.Entities;
 using PocketLibrarian.Infrastructure.Persistence;
@@ -105,7 +106,7 @@ public sealed class AddLocationHandlerTests : IDisposable
     {
         var command = new AddLocationCommand(_userContext.OwnerId, "Room", "A room", Guid.NewGuid());
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<NotFoundException>(() =>
             _handler.Handle(command, CancellationToken.None).AsTask());
     }
 
@@ -119,7 +120,7 @@ public sealed class AddLocationHandlerTests : IDisposable
 
         var command = new AddLocationCommand(_userContext.OwnerId, "Room", "A room", parent.Id);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<NotFoundException>(() =>
             _handler.Handle(command, CancellationToken.None).AsTask());
     }
 

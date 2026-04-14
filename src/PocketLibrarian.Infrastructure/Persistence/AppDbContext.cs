@@ -8,6 +8,9 @@ public sealed class AppDbContext(
     DbContextOptions<AppDbContext> options,
     CurrentUserContext currentUser) : DbContext(options), IApplicationDbContext
 {
+    private bool IsAuthenticated => currentUser.IsAuthenticated;
+    private Guid? CurrentOwnerId => currentUser.IsAuthenticated ? currentUser.OwnerId : null;
+
     public DbSet<User> Users => Set<User>();
     public DbSet<ExternalIdentity> ExternalIdentities => Set<ExternalIdentity>();
     public DbSet<Book> Books => Set<Book>();
@@ -59,7 +62,7 @@ public sealed class AppDbContext(
                 .WithMany()
                 .HasForeignKey(b => b.OwnerId)
                 .OnDelete(DeleteBehavior.Cascade);
-            e.HasQueryFilter(b => !currentUser.IsAuthenticated || b.OwnerId == currentUser.OwnerId);
+            e.HasQueryFilter(b => IsAuthenticated && b.OwnerId == CurrentOwnerId);
         });
 
         modelBuilder.Entity<Location>(e =>
@@ -79,6 +82,7 @@ public sealed class AppDbContext(
                 .WithMany()
                 .HasForeignKey(l => l.OwnerId)
                 .OnDelete(DeleteBehavior.Cascade);
+            e.HasQueryFilter(l => IsAuthenticated && l.OwnerId == CurrentOwnerId);
         });
     }
 }

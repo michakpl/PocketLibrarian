@@ -1,10 +1,10 @@
 using FluentValidation;
 
-namespace PocketLibrarian.Application.Locations.Commands.AddLocation;
+namespace PocketLibrarian.Application.Locations.Commands.UpdateLocation;
 
-public sealed class AddLocationValidator : AbstractValidator<AddLocationCommand>
+public sealed class UpdateLocationValidator : AbstractValidator<UpdateLocationCommand>
 {
-    public AddLocationValidator()
+    public UpdateLocationValidator()
     {
         RuleFor(x => x.Name)
             .NotEmpty()
@@ -15,4 +15,3 @@ public sealed class AddLocationValidator : AbstractValidator<AddLocationCommand>
             .MaximumLength(1024);
     }
 }
-

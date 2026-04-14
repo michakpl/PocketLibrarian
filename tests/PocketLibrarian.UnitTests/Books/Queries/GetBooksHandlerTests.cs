@@ -11,7 +11,7 @@ public sealed class GetBooksHandlerTests : IDisposable
     private readonly AppDbContext _db;
     private readonly GetBooksHandler _handler;
     private readonly CurrentUserContext _userContext;
-    
+
     private static UserIdentity SampleIdentity() => new()
     {
         Provider = "EntraId",
@@ -93,8 +93,9 @@ public sealed class GetBooksHandlerTests : IDisposable
     public async Task Handle_MapsAllDtoFieldsCorrectly()
     {
         var ownerId = _userContext.OwnerId;
-        var locationId = Guid.NewGuid();
-        var book = Book.Create("Dune", "Frank Herbert", ownerId, "9780441013593", locationId);
+        var location = Location.Create("Library", "Home library", "LIB01", ownerId);
+        _db.Locations.Add(location);
+        var book = Book.Create("Dune", "Frank Herbert", ownerId, "9780441013593", location.Id);
         _db.Books.Add(book);
         await _db.SaveChangesAsync();
 
@@ -107,7 +108,7 @@ public sealed class GetBooksHandlerTests : IDisposable
         Assert.Equal("Dune", dto.Title);
         Assert.Equal("Frank Herbert", dto.Author);
         Assert.Equal("9780441013593", dto.Isbn);
-        Assert.Equal(locationId, dto.LocationId);
+        Assert.Equal(location.Id, dto.Location?.Id);
     }
 
     [Fact]
@@ -121,7 +122,7 @@ public sealed class GetBooksHandlerTests : IDisposable
 
         Assert.Single(result);
         Assert.Null(result[0].Isbn);
-        Assert.Null(result[0].LocationId);
+        Assert.Null(result[0].Location);
     }
 }
 

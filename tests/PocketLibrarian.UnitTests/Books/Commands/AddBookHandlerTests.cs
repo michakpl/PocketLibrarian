@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PocketLibrarian.Application.Abstractions;
 using PocketLibrarian.Application.Books.Commands.AddBook;
+using PocketLibrarian.Application.Exceptions;
 using PocketLibrarian.Domain.Entities;
 using PocketLibrarian.Infrastructure.Persistence;
 
@@ -11,6 +12,14 @@ public sealed class AddBookHandlerTests : IDisposable
     private readonly AppDbContext _db;
     private readonly AddBookHandler _handler;
     private readonly Guid _ownerId = Guid.NewGuid();
+    
+    private static UserIdentity SampleIdentity() => new()
+    {
+        Provider = "EntraId",
+        ProviderId = "oid-123",
+        DisplayName = "Test User",
+        Email = "test@example.com"
+    };
 
     public AddBookHandlerTests()
     {
@@ -19,7 +28,9 @@ public sealed class AddBookHandlerTests : IDisposable
             .Options;
 
         // Unresolved context → global query filter passes all rows (!IsAuthenticated = true)
-        _db = new AppDbContext(options, new CurrentUserContext());
+        var userContext = new CurrentUserContext();
+        userContext.Resolve(_ownerId, SampleIdentity());
+        _db = new AppDbContext(options, userContext);
         _handler = new AddBookHandler(_db);
     }
 
@@ -37,7 +48,7 @@ public sealed class AddBookHandlerTests : IDisposable
         Assert.Equal("Dune", result.Title);
         Assert.Equal("Frank Herbert", result.Author);
         Assert.Equal("9780441013593", result.Isbn);
-        Assert.Null(result.LocationId);
+        Assert.Null(result.Location);
     }
 
     [Fact]
@@ -75,7 +86,7 @@ public sealed class AddBookHandlerTests : IDisposable
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
-        Assert.Equal(location.Id, result.LocationId);
+        Assert.Equal(location.Id, result.Location?.Id);
     }
 
     [Fact]
@@ -83,7 +94,7 @@ public sealed class AddBookHandlerTests : IDisposable
     {
         var command = new AddBookCommand(_ownerId, "Title", "Author", null, Guid.NewGuid());
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<NotFoundException>(() =>
             _handler.Handle(command, CancellationToken.None).AsTask());
     }
 
@@ -97,7 +108,7 @@ public sealed class AddBookHandlerTests : IDisposable
 
         var command = new AddBookCommand(_ownerId, "Title", "Author", null, location.Id);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<NotFoundException>(() =>
             _handler.Handle(command, CancellationToken.None).AsTask());
     }
 

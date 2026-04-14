@@ -14,9 +14,9 @@ public sealed class Location
     
     public Location? Parent { get; private set; }
     
-    public Guid? OwnerId { get; private set; }
-    
-    public User? Owner { get; private set; }
+    public Guid OwnerId { get; private set; }
+
+    public User Owner { get; private set; } = null!;
     
     public DateTimeOffset CreatedAt { get; private set; }
     
@@ -42,5 +42,15 @@ public sealed class Location
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
+    }
+
+    public void Update(string name, string description, Guid? parentId)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(name);
+
+        Name = name;
+        Description = description;
+        ParentId = parentId;
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
 }

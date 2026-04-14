@@ -11,7 +11,7 @@ public sealed class GetLocationsHandler(IApplicationDbContext db)
     {
         var locations = await db.Locations
             .Where(l => l.OwnerId == query.OwnerId)
-            .Select(l => new LocationDto(l.Id, l.OwnerId!.Value, l.Name, l.Description, l.Code, l.ParentId))
+            .Select(l => new LocationDto(l.Id, l.OwnerId, l.Name, l.Description, l.Code, l.ParentId))
             .ToListAsync(ct);
 
         return locations;

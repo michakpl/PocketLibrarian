@@ -1,6 +1,7 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
 using PocketLibrarian.Application.Abstractions;
+using PocketLibrarian.Application.Exceptions;
 using PocketLibrarian.Domain.Entities;
 
 namespace PocketLibrarian.Application.Locations.Commands.AddLocation;
@@ -16,8 +17,7 @@ public sealed class AddLocationHandler(IApplicationDbContext db)
                 .AnyAsync(l => l.Id == cmd.ParentId.Value && l.OwnerId == cmd.OwnerId, ct);
 
             if (!parentExists)
-                throw new InvalidOperationException(
-                    $"Parent location '{cmd.ParentId}' was not found or does not belong to the current user.");
+                throw new NotFoundException(nameof(Location), cmd.ParentId.Value);
         }
 
         var code = Guid.NewGuid().ToString("N").ToUpperInvariant();
@@ -26,7 +26,7 @@ public sealed class AddLocationHandler(IApplicationDbContext db)
         db.Locations.Add(location);
         await db.SaveChangesAsync(ct);
 
-        return new LocationDto(location.Id, location.OwnerId!.Value, location.Name, location.Description, location.Code, location.ParentId);
+        return new LocationDto(location.Id, location.OwnerId, location.Name, location.Description, location.Code, location.ParentId);
     }
 }
 

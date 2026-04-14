@@ -43,4 +43,16 @@ public sealed class Book
             UpdatedAt = DateTimeOffset.UtcNow
         };
     }
+
+    public void Update(string title, string author, string? isbn, Guid? locationId)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(title);
+        ArgumentException.ThrowIfNullOrEmpty(author);
+
+        Title = title;
+        Author = author;
+        Isbn = isbn;
+        LocationId = locationId;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
 }
