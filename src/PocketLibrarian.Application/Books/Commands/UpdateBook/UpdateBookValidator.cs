@@ -23,7 +23,7 @@ public sealed class UpdateBookValidator : AbstractValidator<UpdateBookCommand>
 
         RuleFor(x => x.Isbn10)
             .MaximumLength(50)
-            .When(x => x.Isbn13 is not null);
+            .When(x => x.Isbn10 is not null);
     }
 }
 

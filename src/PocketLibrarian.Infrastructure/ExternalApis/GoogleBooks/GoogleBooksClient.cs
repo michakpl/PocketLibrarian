@@ -11,8 +11,9 @@ public sealed class GoogleBooksClient(HttpClient http, IOptions<GoogleBooksOptio
 {
     public async Task<BookMetadata?> LookupAsync(Isbn isbn, CancellationToken ct = default)
     {
-        var apiKey = options.Value.ApiKey;
-        var url = $"volumes?q=isbn:{isbn.Value}&key={apiKey}&maxResults=1";
+        var encodedIsbn = Uri.EscapeDataString(isbn.Value);
+        var encodedApiKey = Uri.EscapeDataString(options.Value.ApiKey);
+        var url = $"volumes?q=isbn:{encodedIsbn}&key={encodedApiKey}&maxResults=1";
 
         var response = await http.GetFromJsonAsync<GoogleBooksSearchResponse>(url, ct);
 

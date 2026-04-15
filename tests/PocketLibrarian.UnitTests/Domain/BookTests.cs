@@ -53,7 +53,7 @@ public sealed class BookTests
     [Fact]
     public void Create_WithNullIsbn_SetsIsbnToNull()
     {
-        var book = Book.Create("Title", "Author", Guid.NewGuid(), isbn13: null, null);
+        var book = Book.Create("Title", "Author", Guid.NewGuid(), isbn13: null, isbn10: null);
 
         Assert.Null(book.Isbn13);
         Assert.Null(book.Isbn10);

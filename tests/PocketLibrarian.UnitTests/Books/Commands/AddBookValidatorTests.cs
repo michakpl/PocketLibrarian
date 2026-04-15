@@ -96,7 +96,7 @@ public sealed class AddBookValidatorTests
     }
 
     [Fact]
-    public void IsbnExceeding50Characters_FailsValidation()
+    public void Isbn13Exceeding50Characters_FailsValidation()
     {
         var command = new AddBookCommand(Guid.NewGuid(), "Title", "Author", new string('9', 51), null, null);
 
@@ -107,7 +107,7 @@ public sealed class AddBookValidatorTests
     }
 
     [Fact]
-    public void IsbnAtMaxLength_PassesValidation()
+    public void Isbn13AtMaxLength_PassesValidation()
     {
         var command = new AddBookCommand(Guid.NewGuid(), "Title", "Author", new string('9', 50), null, null);
 
@@ -117,7 +117,7 @@ public sealed class AddBookValidatorTests
     }
 
     [Fact]
-    public void NullIsbn_SkipsLengthValidation_PassesValidation()
+    public void NullIsbn13_SkipsLengthValidation_PassesValidation()
     {
         var command = new AddBookCommand(Guid.NewGuid(), "Title", "Author", null, null, null);
 
@@ -125,6 +125,38 @@ public sealed class AddBookValidatorTests
 
         Assert.True(result.IsValid);
         Assert.DoesNotContain(result.Errors, e => e.PropertyName == nameof(AddBookCommand.Isbn13));
+    }
+
+    [Fact]
+    public void Isbn10Exceeding50Characters_FailsValidation()
+    {
+        var command = new AddBookCommand(Guid.NewGuid(), "Title", "Author", null, new string('9', 51), null);
+
+        var result = _validator.Validate(command);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.PropertyName == nameof(AddBookCommand.Isbn10));
+    }
+
+    [Fact]
+    public void Isbn10AtMaxLength_PassesValidation()
+    {
+        var command = new AddBookCommand(Guid.NewGuid(), "Title", "Author", null, new string('9', 50), null);
+
+        var result = _validator.Validate(command);
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void NullIsbn10_SkipsLengthValidation_PassesValidation()
+    {
+        var command = new AddBookCommand(Guid.NewGuid(), "Title", "Author", null, null, null);
+
+        var result = _validator.Validate(command);
+
+        Assert.True(result.IsValid);
+        Assert.DoesNotContain(result.Errors, e => e.PropertyName == nameof(AddBookCommand.Isbn10));
     }
 }
 
