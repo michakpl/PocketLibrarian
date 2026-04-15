@@ -12,7 +12,7 @@ public sealed class GetBooksHandler(IApplicationDbContext db)
     {
         var books = await db.Books
             .Where(b => b.OwnerId == query.OwnerId)
-            .Select(b => new BookDto(b.Id, b.OwnerId, b.Title, b.Author, b.Isbn,
+            .Select(b => new BookDto(b.Id, b.OwnerId, b.Title, b.Author, b.Isbn13, b.Isbn10,
                 b.Location != null
                     ? new LocationDto(b.Location.Id, b.Location.OwnerId, b.Location.Name,
                         b.Location.Description, b.Location.Code, b.Location.ParentId)

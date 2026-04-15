@@ -7,6 +7,7 @@ public sealed record UpdateBookCommand(
     Guid OwnerId,
     string Title,
     string Author,
-    string? Isbn,
+    string? Isbn13,
+    string? Isbn10,
     Guid? LocationId) : ICommand<BookDto>;
 

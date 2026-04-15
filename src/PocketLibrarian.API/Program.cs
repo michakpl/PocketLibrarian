@@ -11,8 +11,11 @@ using PocketLibrarian.Application;
 using PocketLibrarian.Application.Abstractions;
 using PocketLibrarian.Application.Behaviors;
 using PocketLibrarian.Application.Exceptions;
+using PocketLibrarian.Application.IsbnLookup;
 using PocketLibrarian.Infrastructure.Auth;
 using PocketLibrarian.Infrastructure.Auth.Providers;
+using PocketLibrarian.Infrastructure.Caching;
+using PocketLibrarian.Infrastructure.ExternalApis.GoogleBooks;
 using PocketLibrarian.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -57,6 +60,9 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.Configuration = builder.Configuration["Redis:ConnectionString"];
     options.InstanceName = "PocketLibrarian:";
 });
+
+builder.Services.AddGoogleBooksClient(builder.Configuration);
+builder.Services.AddScoped<IIsbnCacheService, IsbnCacheService>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CurrentUserContext>();

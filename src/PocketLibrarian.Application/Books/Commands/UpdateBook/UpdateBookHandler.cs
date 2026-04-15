@@ -13,7 +13,6 @@ public sealed class UpdateBookHandler(IApplicationDbContext db)
     public async ValueTask<BookDto> Handle(UpdateBookCommand cmd, CancellationToken ct)
     {
         var book = await db.Books
-            .Include(b => b.Location)
             .FirstOrDefaultAsync(b => b.Id == cmd.BookId && b.OwnerId == cmd.OwnerId, ct);
 
         if (book is null)
@@ -23,23 +22,21 @@ public sealed class UpdateBookHandler(IApplicationDbContext db)
         if (cmd.LocationId.HasValue)
         {
             location = await db.Locations
-                .SingleOrDefaultAsync(l => l.Id == cmd.LocationId.Value && l.OwnerId == cmd.OwnerId, ct);
+                .FirstOrDefaultAsync(l => l.Id == cmd.LocationId.Value && l.OwnerId == cmd.OwnerId, ct);
 
             if (location is null)
                 throw new NotFoundException(nameof(Location), cmd.LocationId.Value);
         }
 
-        book.Update(cmd.Title, cmd.Author, cmd.Isbn, cmd.LocationId);
+        book.Update(cmd.Title, cmd.Author, cmd.Isbn13, cmd.Isbn10, cmd.LocationId);
 
         await db.SaveChangesAsync(ct);
 
-        LocationDto? locationDto = book.Location is not null
-            ? new LocationDto(book.Location.Id, book.Location.OwnerId, book.Location.Name,
-                book.Location.Description, book.Location.Code, book.Location.ParentId)
+        LocationDto? locationDto = location is not null
+            ? new LocationDto(location.Id, location.OwnerId, location.Name,
+                location.Description, location.Code, location.ParentId)
             : null;
 
-        return new BookDto(book.Id, book.OwnerId, book.Title, book.Author, book.Isbn, locationDto);
+        return new BookDto(book.Id, book.OwnerId, book.Title, book.Author, book.Isbn13, book.Isbn10, locationDto);
     }
 }
-
-

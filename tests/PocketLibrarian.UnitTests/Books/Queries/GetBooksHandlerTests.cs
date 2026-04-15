@@ -94,7 +94,7 @@ public sealed class GetBooksHandlerTests : IDisposable
         var ownerId = _userContext.OwnerId;
         var location = Location.Create("Library", "Home library", "LIB01", ownerId);
         _db.Locations.Add(location);
-        var book = Book.Create("Dune", "Frank Herbert", ownerId, "9780441013593", location.Id);
+        var book = Book.Create("Dune", "Frank Herbert", ownerId, "9780441013593", "1954839243", location.Id);
         _db.Books.Add(book);
         await _db.SaveChangesAsync();
 
@@ -106,7 +106,8 @@ public sealed class GetBooksHandlerTests : IDisposable
         Assert.Equal(ownerId, dto.OwnerId);
         Assert.Equal("Dune", dto.Title);
         Assert.Equal("Frank Herbert", dto.Author);
-        Assert.Equal("9780441013593", dto.Isbn);
+        Assert.Equal("9780441013593", dto.Isbn13);
+        Assert.Equal("1954839243", dto.Isbn10);
         Assert.Equal(location.Id, dto.Location?.Id);
     }
 
@@ -120,7 +121,7 @@ public sealed class GetBooksHandlerTests : IDisposable
         var result = await _handler.Handle(new GetBooksQuery(ownerId), CancellationToken.None);
 
         Assert.Single(result);
-        Assert.Null(result[0].Isbn);
+        Assert.Null(result[0].Isbn13);
         Assert.Null(result[0].Location);
     }
 }

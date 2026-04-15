@@ -8,7 +8,9 @@ public sealed class Book
 
     public string Author { get; private set; } = string.Empty;
 
-    public string? Isbn { get; private set; }
+    public string? Isbn13 { get; private set; }
+    
+    public string? Isbn10 { get; private set; }
 
     public Guid OwnerId { get; private set; }
 
@@ -26,7 +28,7 @@ public sealed class Book
     {
     }
 
-    public static Book Create(string title, string author, Guid ownerId, string? isbn = null, Guid? locationId = null)
+    public static Book Create(string title, string author, Guid ownerId, string? isbn13 = null, string? isbn10 = null, Guid? locationId = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(title);
         ArgumentException.ThrowIfNullOrEmpty(author);
@@ -36,7 +38,8 @@ public sealed class Book
             Id = Guid.NewGuid(),
             Title = title,
             Author = author,
-            Isbn = isbn,
+            Isbn13 = isbn13,
+            Isbn10 = isbn10,
             OwnerId = ownerId,
             LocationId = locationId,
             CreatedAt = DateTimeOffset.UtcNow,
@@ -44,14 +47,15 @@ public sealed class Book
         };
     }
 
-    public void Update(string title, string author, string? isbn, Guid? locationId)
+    public void Update(string title, string author, string? isbn13, string? isbn10, Guid? locationId  = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(title);
         ArgumentException.ThrowIfNullOrEmpty(author);
 
         Title = title;
         Author = author;
-        Isbn = isbn;
+        Isbn13 = isbn13;
+        Isbn10 = isbn10;
         LocationId = locationId;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
