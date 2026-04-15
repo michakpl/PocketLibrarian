@@ -19,17 +19,16 @@ public sealed class UpdateBookHandler(IApplicationDbContext db)
         if (book is null)
             throw new NotFoundException(nameof(Book), cmd.BookId);
 
-        Location? location = null;
         if (cmd.LocationId.HasValue)
         {
-            location = await db.Locations
-                .SingleOrDefaultAsync(l => l.Id == cmd.LocationId.Value && l.OwnerId == cmd.OwnerId, ct);
+            var locationExists = await db.Locations
+                .AnyAsync(l => l.Id == cmd.LocationId.Value && l.OwnerId == cmd.OwnerId, ct);
 
-            if (location is null)
+            if (!locationExists)
                 throw new NotFoundException(nameof(Location), cmd.LocationId.Value);
         }
 
-        book.Update(cmd.Title, cmd.Author, cmd.Isbn, cmd.LocationId);
+        book.Update(cmd.Title, cmd.Author, cmd.Isbn13, cmd.Isbn10, cmd.LocationId);
 
         await db.SaveChangesAsync(ct);
 
@@ -38,7 +37,7 @@ public sealed class UpdateBookHandler(IApplicationDbContext db)
                 book.Location.Description, book.Location.Code, book.Location.ParentId)
             : null;
 
-        return new BookDto(book.Id, book.OwnerId, book.Title, book.Author, book.Isbn, locationDto);
+        return new BookDto(book.Id, book.OwnerId, book.Title, book.Author, book.Isbn13, book.Isbn10, locationDto);
     }
 }
 

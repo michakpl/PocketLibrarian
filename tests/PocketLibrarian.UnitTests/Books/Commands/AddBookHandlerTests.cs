@@ -38,7 +38,7 @@ public sealed class AddBookHandlerTests : IDisposable
     [Fact]
     public async Task Handle_WithoutLocationId_ReturnsBookDtoWithCorrectProperties()
     {
-        var command = new AddBookCommand(_ownerId, "Dune", "Frank Herbert", "9780441013593", null);
+        var command = new AddBookCommand(_ownerId, "Dune", "Frank Herbert", "9780441013593", "1954839243", null);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -46,14 +46,15 @@ public sealed class AddBookHandlerTests : IDisposable
         Assert.Equal(_ownerId, result.OwnerId);
         Assert.Equal("Dune", result.Title);
         Assert.Equal("Frank Herbert", result.Author);
-        Assert.Equal("9780441013593", result.Isbn);
+        Assert.Equal("9780441013593", result.Isbn13);
+        Assert.Equal("1954839243", result.Isbn10);
         Assert.Null(result.Location);
     }
 
     [Fact]
     public async Task Handle_WithoutLocationId_PersistsBookToDatabase()
     {
-        var command = new AddBookCommand(_ownerId, "1984", "George Orwell", null, null);
+        var command = new AddBookCommand(_ownerId, "1984", "George Orwell", null, null, null);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -67,11 +68,12 @@ public sealed class AddBookHandlerTests : IDisposable
     [Fact]
     public async Task Handle_WithNullIsbn_ReturnsNullIsbnInDto()
     {
-        var command = new AddBookCommand(_ownerId, "Title", "Author", null, null);
+        var command = new AddBookCommand(_ownerId, "Title", "Author", null, null, null);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
-        Assert.Null(result.Isbn);
+        Assert.Null(result.Isbn13);
+        Assert.Null(result.Isbn10);
     }
 
     [Fact]
@@ -81,7 +83,7 @@ public sealed class AddBookHandlerTests : IDisposable
         _db.Locations.Add(location);
         await _db.SaveChangesAsync();
 
-        var command = new AddBookCommand(_ownerId, "Fahrenheit 451", "Ray Bradbury", null, location.Id);
+        var command = new AddBookCommand(_ownerId, "Fahrenheit 451", "Ray Bradbury", null, null, location.Id);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -91,7 +93,7 @@ public sealed class AddBookHandlerTests : IDisposable
     [Fact]
     public async Task Handle_WithNonExistentLocationId_ThrowsInvalidOperationException()
     {
-        var command = new AddBookCommand(_ownerId, "Title", "Author", null, Guid.NewGuid());
+        var command = new AddBookCommand(_ownerId, "Title", "Author", null, null, Guid.NewGuid());
 
         await Assert.ThrowsAsync<NotFoundException>(() =>
             _handler.Handle(command, CancellationToken.None).AsTask());
@@ -105,7 +107,7 @@ public sealed class AddBookHandlerTests : IDisposable
         _db.Locations.Add(location);
         await _db.SaveChangesAsync();
 
-        var command = new AddBookCommand(_ownerId, "Title", "Author", null, location.Id);
+        var command = new AddBookCommand(_ownerId, "Title", "Author", null, null, location.Id);
 
         await Assert.ThrowsAsync<NotFoundException>(() =>
             _handler.Handle(command, CancellationToken.None).AsTask());
@@ -114,7 +116,7 @@ public sealed class AddBookHandlerTests : IDisposable
     [Fact]
     public async Task Handle_ReturnedDtoId_MatchesPersistedBook()
     {
-        var command = new AddBookCommand(_ownerId, "Brave New World", "Aldous Huxley", null, null);
+        var command = new AddBookCommand(_ownerId, "Brave New World", "Aldous Huxley", null, null, null);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 

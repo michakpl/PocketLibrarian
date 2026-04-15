@@ -42,7 +42,7 @@ public sealed class UpdateBookHandlerTests : IDisposable
         _db.Books.Add(book);
         await _db.SaveChangesAsync();
 
-        var command = new UpdateBookCommand(book.Id, _ownerId, "New Title", "New Author", "9780441013593", null);
+        var command = new UpdateBookCommand(book.Id, _ownerId, "New Title", "New Author", "9780441013593", "1954839243", null);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -50,18 +50,19 @@ public sealed class UpdateBookHandlerTests : IDisposable
         Assert.Equal(_ownerId, result.OwnerId);
         Assert.Equal("New Title", result.Title);
         Assert.Equal("New Author", result.Author);
-        Assert.Equal("9780441013593", result.Isbn);
+        Assert.Equal("9780441013593", result.Isbn13);
+        Assert.Equal("1954839243", result.Isbn10);
         Assert.Null(result.Location);
     }
 
     [Fact]
     public async Task Handle_WithValidCommand_PersistsChangesToDatabase()
     {
-        var book = Book.Create("Old Title", "Old Author", _ownerId, "0000000000");
+        var book = Book.Create("Old Title", "Old Author", _ownerId, "0000000000", "00000000");
         _db.Books.Add(book);
         await _db.SaveChangesAsync();
 
-        var command = new UpdateBookCommand(book.Id, _ownerId, "Updated Title", "Updated Author", null, null);
+        var command = new UpdateBookCommand(book.Id, _ownerId, "Updated Title", "Updated Author", null, null, null);
 
         await _handler.Handle(command, CancellationToken.None);
 
@@ -69,13 +70,14 @@ public sealed class UpdateBookHandlerTests : IDisposable
         var saved = await _db.Books.IgnoreQueryFilters().SingleAsync(b => b.Id == book.Id);
         Assert.Equal("Updated Title", saved.Title);
         Assert.Equal("Updated Author", saved.Author);
-        Assert.Null(saved.Isbn);
+        Assert.Null(saved.Isbn13);
+        Assert.Null(saved.Isbn10);
     }
 
     [Fact]
     public async Task Handle_WithNonExistentBookId_ThrowsNotFoundException()
     {
-        var command = new UpdateBookCommand(Guid.NewGuid(), _ownerId, "Title", "Author", null, null);
+        var command = new UpdateBookCommand(Guid.NewGuid(), _ownerId, "Title", "Author", null, null, null);
 
         await Assert.ThrowsAsync<NotFoundException>(() =>
             _handler.Handle(command, CancellationToken.None).AsTask());
@@ -89,7 +91,7 @@ public sealed class UpdateBookHandlerTests : IDisposable
         _db.Books.Add(book);
         await _db.SaveChangesAsync();
 
-        var command = new UpdateBookCommand(book.Id, _ownerId, "New Title", "New Author", null, null);
+        var command = new UpdateBookCommand(book.Id, _ownerId, "New Title", "New Author", null, null, null);
 
         await Assert.ThrowsAsync<NotFoundException>(() =>
             _handler.Handle(command, CancellationToken.None).AsTask());
@@ -104,7 +106,7 @@ public sealed class UpdateBookHandlerTests : IDisposable
         _db.Books.Add(book);
         await _db.SaveChangesAsync();
 
-        var command = new UpdateBookCommand(book.Id, _ownerId, "Title", "Author", null, location.Id);
+        var command = new UpdateBookCommand(book.Id, _ownerId, "Title", "Author", null, null, location.Id);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -120,7 +122,7 @@ public sealed class UpdateBookHandlerTests : IDisposable
         _db.Books.Add(book);
         await _db.SaveChangesAsync();
 
-        var command = new UpdateBookCommand(book.Id, _ownerId, "Title", "Author", null, Guid.NewGuid());
+        var command = new UpdateBookCommand(book.Id, _ownerId, "Title", "Author", null, null, Guid.NewGuid());
 
         await Assert.ThrowsAsync<NotFoundException>(() =>
             _handler.Handle(command, CancellationToken.None).AsTask());
@@ -136,7 +138,7 @@ public sealed class UpdateBookHandlerTests : IDisposable
         _db.Books.Add(book);
         await _db.SaveChangesAsync();
 
-        var command = new UpdateBookCommand(book.Id, _ownerId, "Title", "Author", null, location.Id);
+        var command = new UpdateBookCommand(book.Id, _ownerId, "Title", "Author", null, null, location.Id);
 
         await Assert.ThrowsAsync<NotFoundException>(() =>
             _handler.Handle(command, CancellationToken.None).AsTask());
@@ -147,11 +149,11 @@ public sealed class UpdateBookHandlerTests : IDisposable
     {
         var location = Location.Create("Shelf A", "Top shelf", "SHELF-A", _ownerId);
         _db.Locations.Add(location);
-        var book = Book.Create("Title", "Author", _ownerId, null, location.Id);
+        var book = Book.Create("Title", "Author", _ownerId, null, null, location.Id);
         _db.Books.Add(book);
         await _db.SaveChangesAsync();
 
-        var command = new UpdateBookCommand(book.Id, _ownerId, "Title", "Author", null, null);
+        var command = new UpdateBookCommand(book.Id, _ownerId, "Title", "Author", null, null, null);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 

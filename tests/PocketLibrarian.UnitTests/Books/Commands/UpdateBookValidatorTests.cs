@@ -10,7 +10,7 @@ public sealed class UpdateBookValidatorTests
     public void ValidCommand_WithAllFields_PassesValidation()
     {
         var command = new UpdateBookCommand(Guid.NewGuid(), Guid.NewGuid(), "Dune", "Frank Herbert",
-            "9780441013593", Guid.NewGuid());
+            "9780441013593", "1954839243", Guid.NewGuid());
 
         var result = _validator.Validate(command);
 
@@ -20,7 +20,7 @@ public sealed class UpdateBookValidatorTests
     [Fact]
     public void ValidCommand_WithNullIsbnAndNullLocation_PassesValidation()
     {
-        var command = new UpdateBookCommand(Guid.NewGuid(), Guid.NewGuid(), "Title", "Author", null, null);
+        var command = new UpdateBookCommand(Guid.NewGuid(), Guid.NewGuid(), "Title", "Author", null, null, null);
 
         var result = _validator.Validate(command);
 
@@ -30,7 +30,7 @@ public sealed class UpdateBookValidatorTests
     [Fact]
     public void EmptyBookId_FailsValidation()
     {
-        var command = new UpdateBookCommand(Guid.Empty, Guid.NewGuid(), "Title", "Author", null, null);
+        var command = new UpdateBookCommand(Guid.Empty, Guid.NewGuid(), "Title", "Author", null, null, null);
 
         var result = _validator.Validate(command);
 
@@ -43,7 +43,7 @@ public sealed class UpdateBookValidatorTests
     [InlineData("   ")]
     public void EmptyOrWhitespaceTitle_FailsValidation(string title)
     {
-        var command = new UpdateBookCommand(Guid.NewGuid(), Guid.NewGuid(), title, "Author", null, null);
+        var command = new UpdateBookCommand(Guid.NewGuid(), Guid.NewGuid(), title, "Author", null, null, null);
 
         var result = _validator.Validate(command);
 
@@ -54,7 +54,7 @@ public sealed class UpdateBookValidatorTests
     [Fact]
     public void TitleExceeding256Characters_FailsValidation()
     {
-        var command = new UpdateBookCommand(Guid.NewGuid(), Guid.NewGuid(), new string('A', 257), "Author", null, null);
+        var command = new UpdateBookCommand(Guid.NewGuid(), Guid.NewGuid(), new string('A', 257), "Author", null, null, null);
 
         var result = _validator.Validate(command);
 
@@ -65,7 +65,7 @@ public sealed class UpdateBookValidatorTests
     [Fact]
     public void TitleAtMaxLength_PassesValidation()
     {
-        var command = new UpdateBookCommand(Guid.NewGuid(), Guid.NewGuid(), new string('A', 256), "Author", null, null);
+        var command = new UpdateBookCommand(Guid.NewGuid(), Guid.NewGuid(), new string('A', 256), "Author", null, null, null);
 
         var result = _validator.Validate(command);
 
@@ -77,7 +77,7 @@ public sealed class UpdateBookValidatorTests
     [InlineData("   ")]
     public void EmptyOrWhitespaceAuthor_FailsValidation(string author)
     {
-        var command = new UpdateBookCommand(Guid.NewGuid(), Guid.NewGuid(), "Title", author, null, null);
+        var command = new UpdateBookCommand(Guid.NewGuid(), Guid.NewGuid(), "Title", author, null, null, null);
 
         var result = _validator.Validate(command);
 
@@ -88,7 +88,7 @@ public sealed class UpdateBookValidatorTests
     [Fact]
     public void AuthorExceeding256Characters_FailsValidation()
     {
-        var command = new UpdateBookCommand(Guid.NewGuid(), Guid.NewGuid(), "Title", new string('B', 257), null, null);
+        var command = new UpdateBookCommand(Guid.NewGuid(), Guid.NewGuid(), "Title", new string('B', 257), null, null, null);
 
         var result = _validator.Validate(command);
 
@@ -99,7 +99,7 @@ public sealed class UpdateBookValidatorTests
     [Fact]
     public void AuthorAtMaxLength_PassesValidation()
     {
-        var command = new UpdateBookCommand(Guid.NewGuid(), Guid.NewGuid(), "Title", new string('B', 256), null, null);
+        var command = new UpdateBookCommand(Guid.NewGuid(), Guid.NewGuid(), "Title", new string('B', 256), null, null, null);
 
         var result = _validator.Validate(command);
 
@@ -109,18 +109,18 @@ public sealed class UpdateBookValidatorTests
     [Fact]
     public void IsbnExceeding50Characters_FailsValidation()
     {
-        var command = new UpdateBookCommand(Guid.NewGuid(), Guid.NewGuid(), "Title", "Author", new string('9', 51), null);
+        var command = new UpdateBookCommand(Guid.NewGuid(), Guid.NewGuid(), "Title", "Author", new string('9', 51), null, null);
 
         var result = _validator.Validate(command);
 
         Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, e => e.PropertyName == nameof(UpdateBookCommand.Isbn));
+        Assert.Contains(result.Errors, e => e.PropertyName == nameof(UpdateBookCommand.Isbn13));
     }
 
     [Fact]
     public void IsbnAtMaxLength_PassesValidation()
     {
-        var command = new UpdateBookCommand(Guid.NewGuid(), Guid.NewGuid(), "Title", "Author", new string('9', 50), null);
+        var command = new UpdateBookCommand(Guid.NewGuid(), Guid.NewGuid(), "Title", "Author", new string('9', 50), null, null);
 
         var result = _validator.Validate(command);
 
@@ -130,11 +130,11 @@ public sealed class UpdateBookValidatorTests
     [Fact]
     public void NullIsbn_SkipsLengthValidation_PassesValidation()
     {
-        var command = new UpdateBookCommand(Guid.NewGuid(), Guid.NewGuid(), "Title", "Author", null, null);
+        var command = new UpdateBookCommand(Guid.NewGuid(), Guid.NewGuid(), "Title", "Author", null, null, null);
 
         var result = _validator.Validate(command);
 
         Assert.True(result.IsValid);
-        Assert.DoesNotContain(result.Errors, e => e.PropertyName == nameof(UpdateBookCommand.Isbn));
+        Assert.DoesNotContain(result.Errors, e => e.PropertyName == nameof(UpdateBookCommand.Isbn13));
     }
 }

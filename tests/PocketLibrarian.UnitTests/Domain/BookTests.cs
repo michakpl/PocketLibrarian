@@ -10,12 +10,13 @@ public sealed class BookTests
         var ownerId = Guid.NewGuid();
         var locationId = Guid.NewGuid();
 
-        var book = Book.Create("The Great Gatsby", "F. Scott Fitzgerald", ownerId, "9780743273565", locationId);
+        var book = Book.Create("The Great Gatsby", "F. Scott Fitzgerald", ownerId, "9780743273565", "1954839243", locationId);
 
         Assert.Equal("The Great Gatsby", book.Title);
         Assert.Equal("F. Scott Fitzgerald", book.Author);
         Assert.Equal(ownerId, book.OwnerId);
-        Assert.Equal("9780743273565", book.Isbn);
+        Assert.Equal("9780743273565", book.Isbn13);
+        Assert.Equal("1954839243", book.Isbn10);
         Assert.Equal(locationId, book.LocationId);
     }
 
@@ -52,9 +53,10 @@ public sealed class BookTests
     [Fact]
     public void Create_WithNullIsbn_SetsIsbnToNull()
     {
-        var book = Book.Create("Title", "Author", Guid.NewGuid(), isbn: null);
+        var book = Book.Create("Title", "Author", Guid.NewGuid(), isbn13: null, null);
 
-        Assert.Null(book.Isbn);
+        Assert.Null(book.Isbn13);
+        Assert.Null(book.Isbn10);
     }
 
     [Fact]

@@ -22,12 +22,12 @@ public sealed class AddBookHandler(IApplicationDbContext db)
                 throw new NotFoundException(nameof(Location), cmd.LocationId.Value);
         }
 
-        var book = Book.Create(cmd.Title, cmd.Author, cmd.OwnerId, cmd.Isbn, cmd.LocationId);
+        var book = Book.Create(cmd.Title, cmd.Author, cmd.OwnerId, cmd.Isbn13, cmd.Isbn10, cmd.LocationId);
 
         db.Books.Add(book);
         await db.SaveChangesAsync(ct);
 
-        return new BookDto(book.Id, book.OwnerId, book.Title, book.Author, book.Isbn,
+        return new BookDto(book.Id, book.OwnerId, book.Title, book.Author, book.Isbn13, book.Isbn10,
             location != null
                 ? new LocationDto(location.Id, location.OwnerId, location.Name, location.Description, location.Code,
                     location.ParentId)

@@ -56,7 +56,9 @@ public sealed class AppDbContext(
             e.Property(b => b.Author)
                 .IsRequired()
                 .HasMaxLength(256);
-            e.Property(b => b.Isbn)
+            e.Property(b => b.Isbn13)
+                .HasMaxLength(50);
+            e.Property(b => b.Isbn10)
                 .HasMaxLength(50);
             e.HasOne(b => b.Owner)
                 .WithMany()
