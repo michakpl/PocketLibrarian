@@ -50,6 +50,23 @@ services:
       redis:
         condition: service_healthy
 
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    image: pocketlibrarian-web
+    ports:
+      - "3000:3000"
+    env_file:
+      - web/.env
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    depends_on:
+      - api
+
 volumes:
   sqldata:
   redisdata:
