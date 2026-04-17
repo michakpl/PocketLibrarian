@@ -13,8 +13,6 @@
       - "dotnet restore"
       - "dotnet build --no-restore --configuration Release"
       - "dotnet test --no-build --configuration Release --verbosity normal tests/PocketLibrarian.UnitTests/PocketLibrarian.UnitTests.csproj"
-    cached_dirs:
-      - "/root/.nuget/packages"
     shell: "BASH"
   - action: "Run Vitest"
     type: "BUILD"

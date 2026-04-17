@@ -66,7 +66,8 @@ describe('session — createSession', () => {
     await createSession(TEST_PAYLOAD)
 
     expect(mockCookieStore.set).toHaveBeenCalledOnce()
-    const [name, options] = mockCookieStore.set.mock.calls[0]
+    const [name, token, options] = mockCookieStore.set.mock.calls[0]
+    expect(token).not.toBeNull();
     expect(name).toBe('pocketlibrarian.session')
     expect(options.httpOnly).toBe(true)
     expect(options.sameSite).toBe('lax')
