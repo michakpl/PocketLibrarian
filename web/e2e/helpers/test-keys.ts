@@ -1,0 +1,29 @@
+/**
+ * Static RSA key pair used only for e2e test token signing.
+ * These keys have NO security implications — they are test-only fixtures.
+ */
+export const E2E_TEST_KID = 'e2e-test-key-1'
+
+export const E2E_TEST_PUBLIC_JWK = {
+  kty: 'RSA',
+  use: 'sig',
+  alg: 'RS256',
+  kid: E2E_TEST_KID,
+  n: 'tyDTmfkb7trGlzokhkt4neoJzJhs4kkPIpSeKNEsrvH17gTpMALJEy6jLhs5-0xDFEI6BeBwaDL8EmVo7bj8jLp62vn9XR1jTosPx_5dOwOLrlUxBXA1zLv5b14ir7t1_vXdkPfRwLD66nHPI_xNCAS69V2BNY47jyqJR8H_smmWqX8irLA1VhDaRcdhOFZcdZXK-RBEbUKWUXUfZy3Zhtyqoysc7d5QXwlQcjqulgbXPF1vHfQZiK55O27k1h48MT4NecxEm02B7gIe8ZTqakUEp1t00QL2fDx5hmtREe4PQTURBxyRr7Dm4oEu51niPXv3olxNsBpsoOoxnXrBAQ',
+  e: 'AQAB',
+}
+
+export const E2E_TEST_PRIVATE_JWK = {
+  kty: 'RSA',
+  alg: 'RS256',
+  kid: E2E_TEST_KID,
+  n: 'tyDTmfkb7trGlzokhkt4neoJzJhs4kkPIpSeKNEsrvH17gTpMALJEy6jLhs5-0xDFEI6BeBwaDL8EmVo7bj8jLp62vn9XR1jTosPx_5dOwOLrlUxBXA1zLv5b14ir7t1_vXdkPfRwLD66nHPI_xNCAS69V2BNY47jyqJR8H_smmWqX8irLA1VhDaRcdhOFZcdZXK-RBEbUKWUXUfZy3Zhtyqoysc7d5QXwlQcjqulgbXPF1vHfQZiK55O27k1h48MT4NecxEm02B7gIe8ZTqakUEp1t00QL2fDx5hmtREe4PQTURBxyRr7Dm4oEu51niPXv3olxNsBpsoOoxnXrBAQ',
+  e: 'AQAB',
+  d: '7Il6HWemrN6TpMIfwKxlyj3Xv8J3jHwnEIORG9Joj4_4w3g_EG8zSZOeh-9Nn_ThWp7a_hGTH667Pl0T1fsa5VX5WjQ3uWORjIy9Kuti1ixo6hp1Nzu47LngIKQhfttO41la1zqXs6I7Ie00S_GXjhk4uQq4hR8yebnM7Y2nY3QivP-ygEXmqFCvLRq9Nt3ro1x3l63IDHDh1PhE-TF9ik5dpf0uZKdC5keBoRAQjnDg3pkGVDuktIyePwpGhQKi1uPG_JNczQTm-Q8DtDGRrQhjPg8bWZCVDqQ0TmGLbQB8PRFBdeS5LwNmjhx-UwbxsbyIvuS8cIW0sM1qEryB',
+  p: '7YuUxAuh4Ogmdyr9kTS7cQXN2_iRpqjglnCeWf5HeHuIxo6Mi3yMcXVx7xYihghnL-WnZQ-Kruc_i71-lQXlZB4TfdeR1QU6dvP8szGrFphdpINwhKaMl-RD-toJ9Be10GRPDxSGCwAd85PGts-7tm6YJKS9GqY09qllmSNVM7s',
+  q: 'xVr5AAxvDP_QDtpvjjgKCoeQHDL2U6fS08vK0lthX_XOzWf1JtL_Cp0LMfJdCmV9grYVmuMdkSFIveiGnhb38wepkUcdx0t00jVoAua4U2ehph7tP5dcnZiSW1vtWYOaYP_TTWjsk8mVmEltyU2qm8QKW2RCLmTLBpOC90h7THM',
+  dp: 'P2MPv4CbIbjRCtud7jF0EyTJWflqZF6MD5jdqIYB7FSKmvFO76m8kEoWrQXrEHkNj-poUL9k8mcivddC_-Ei5SRhbyMm9wD-KN_Sfr6yOMVPt6abT8phmeZ_fWDRZyEskv8xWYTQf_73_xdf30hvfq7kSmLrU0EmwOtTARo8kiE',
+  dq: 'l182m1XuG39euvXKGMBc20StQSPJkdKoP3ERSRVz86FbFGuHOlcd7asUuiOWP3ImuYoluh43QGjSHW9rSXh-h7a51cdBTOpQWSdDdu42NSrIbt1Lxbm3_NzYbSBuRXlOgNXX4Yj35Eb66cpwXbWnhT_xXbXhmSoQGyQrkLXUdIc',
+  qi: 'LZcfTUVVPE3L1zkaunoP4PC5w3LoAef_Uyr1_fEwZMlKb6REP4OvwzWQUsJp6d6sGQ-2oXUMhXxXyOrDOa4gonQw0mMAssbOGEHrjxiU2EGla2I6hExSR7O4znQIJIrHnUJ3v0u4Ey6X31P4bnO_lOdCsrZgH8YQ-HRxG8lEJsk',
+}
+

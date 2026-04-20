@@ -40,3 +40,30 @@ dc_resource(
     labels=['backend'],
     resource_deps=['db', 'redis'],
 )
+
+docker_build(
+    'pocketlibrarian-web',
+    context='./web',
+    dockerfile='./web/Dockerfile',
+    only=[
+        'app/',
+        'public/',
+        'package.json',
+        'pnpm-lock.yaml',
+        'pnpm-workspace.yaml',
+        'next.config.ts',
+        'tsconfig.json',
+        'postcss.config.mjs',
+        'eslint.config.mjs',
+    ],
+    live_update=[
+        sync('./web/public', '/app/public'),
+    ],
+)
+
+dc_resource(
+    'web',
+    labels=['frontend'],
+    resource_deps=['api'],
+    links=['http://localhost:3000'],
+)

@@ -10,9 +10,21 @@
     docker_image_name: "mcr.microsoft.com/dotnet/sdk"
     docker_image_tag: "10.0"
     execute_commands:
-    - "dotnet restore"
-    - "dotnet build --no-restore --configuration Release"
-    - "dotnet test --no-build --configuration Release --verbosity normal tests/PocketLibrarian.UnitTests/PocketLibrarian.UnitTests.csproj"
-    cached_dirs:
-    - "/root/.nuget/packages"
+      - "dotnet restore"
+      - "dotnet build --no-restore --configuration Release"
+      - "dotnet test --no-build --configuration Release --verbosity normal tests/PocketLibrarian.UnitTests/PocketLibrarian.UnitTests.csproj"
     shell: "BASH"
+  - action: "Run Vitest"
+    type: "BUILD"
+    docker_image_name: "node"
+    docker_image_tag: "25-alpine"
+    execute_commands:
+      - cd ./web
+      - npm install -g pnpm@10
+      - pnpm config set store-dir /pnpm-store
+      - ln -sf /node-modules node_modules
+      - pnpm install --frozen-lockfile
+      - pnpm test
+    cached_dirs:
+      - "/pnpm-store"
+      - "/node-modules"
