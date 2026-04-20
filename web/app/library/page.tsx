@@ -1,16 +1,23 @@
+import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
-import { getBooks } from '@/lib/api/books'
 import SignOutButton from '@/components/SignOutButton'
 import { BookOpen, Library } from 'lucide-react'
 
 export default async function LibraryPage() {
   const session = await getSession()
   if (!session) {
-    return
+    redirect('/auth')
   }
 
-  const books = await getBooks(session.accessToken)
-  console.log('books:', books)
+  // let books
+  // try {
+  //   books = await getBooks(session.accessToken)
+  // } catch (err) {
+  //   if (err instanceof UnauthorizedError) {
+  //     redirect('/auth/refresh?callbackUrl=/library')
+  //   }
+  //   throw err
+  // }
 
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-900 via-blue-950 to-slate-900">

@@ -3,7 +3,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { useRouter } from 'next/navigation'
 import {IMsalContext, useMsal} from '@azure/msal-react'
 import AuthPage from '@/app/auth/page'
-import {AppRouterInstance} from "next/dist/shared/lib/app-router-context.shared-runtime";
 
 vi.mock('@azure/msal-react', () => ({
   useMsal: vi.fn(),
@@ -13,13 +12,22 @@ const mockLoginRedirect = vi.fn()
 const mockHandleRedirectPromise = vi.fn()
 const mockReplace = vi.fn()
 
+interface AppRouterInstanceMock {
+  replace: typeof mockReplace;
+  push: (path: string) => void;
+  prefetch: (path: string) => void;
+  back: () => void;
+  refresh: () => void;
+  forward: () => void;
+}
+
 vi.mocked(useRouter).mockReturnValue({
   replace: mockReplace,
   push: vi.fn(),
   prefetch: vi.fn(),
   back: vi.fn(),
   refresh: vi.fn(),
-} as unknown as AppRouterInstance)
+} as unknown as AppRouterInstanceMock)
 
 function setupMsal(inProgress: string) {
   vi.mocked(useMsal).mockReturnValue({
@@ -30,6 +38,16 @@ function setupMsal(inProgress: string) {
     inProgress,
     accounts: [],
   } as unknown as IMsalContext)
+}
+
+/** Builds a fetch mock that returns csrfToken on GET, then the given response on POST. */
+function mockFetchCsrfThenPost(postOk: boolean) {
+  return vi.fn()
+    .mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ csrfToken: 'mock-csrf-token' }),
+    } as unknown as Response)
+    .mockResolvedValueOnce({ ok: postOk } as Response)
 }
 
 describe('AuthPage', () => {
@@ -76,7 +94,7 @@ describe('AuthPage', () => {
     })
   })
 
-  it('POSTs session data and redirects to /library after successful redirect', async () => {
+  it('fetches CSRF token then POSTs idToken + accessToken and redirects to /library', async () => {
     setupMsal('handleRedirect')
     mockHandleRedirectPromise.mockResolvedValue({
       account: {
@@ -84,28 +102,66 @@ describe('AuthPage', () => {
         name: 'Alice',
         username: 'alice@example.com',
       },
+      idToken: 'msal-id-token',
       accessToken: 'msal-access-token',
+      expiresOn: new Date(Date.now() + 3_600_000),
     })
-    vi.mocked(global.fetch).mockResolvedValue({ ok: true } as Response)
+    global.fetch = mockFetchCsrfThenPost(true)
 
     render(<AuthPage />)
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
+      // First call: GET to obtain the CSRF token
+      expect(global.fetch).toHaveBeenNthCalledWith(1, '/api/auth/session')
+
+      // Second call: POST with idToken, accessToken, and x-csrf-token header
+      expect(global.fetch).toHaveBeenNthCalledWith(
+        2,
         '/api/auth/session',
-        expect.objectContaining({ method: 'POST' }),
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            'x-csrf-token': 'mock-csrf-token',
+          }),
+          body: expect.stringContaining('"idToken":"msal-id-token"'),
+        }),
       )
+
       expect(mockReplace).toHaveBeenCalledWith('/library')
     })
   })
 
-  it('shows an error message when the session API call fails', async () => {
+  it('POST body does not contain userId, name or email', async () => {
     setupMsal('handleRedirect')
     mockHandleRedirectPromise.mockResolvedValue({
       account: { localAccountId: 'u1', name: 'Alice', username: 'alice@example.com' },
+      idToken: 'msal-id-token',
       accessToken: 'tok',
+      expiresOn: new Date(Date.now() + 3_600_000),
     })
-    vi.mocked(global.fetch).mockResolvedValue({ ok: false } as Response)
+    global.fetch = mockFetchCsrfThenPost(true)
+
+    render(<AuthPage />)
+
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/library'))
+
+    const postCall = vi.mocked(global.fetch).mock.calls[1]
+    const postedBody = JSON.parse(postCall[1]?.body as string)
+    expect(postedBody).not.toHaveProperty('userId')
+    expect(postedBody).not.toHaveProperty('name')
+    expect(postedBody).not.toHaveProperty('email')
+  })
+
+  it('shows an error message when the session API POST fails', async () => {
+    setupMsal('handleRedirect')
+    mockHandleRedirectPromise.mockResolvedValue({
+      account: { localAccountId: 'u1', name: 'Alice', username: 'alice@example.com' },
+      idToken: 'msal-id-token',
+      accessToken: 'tok',
+      expiresOn: new Date(Date.now() + 3_600_000),
+    })
+    global.fetch = mockFetchCsrfThenPost(false)
 
     render(<AuthPage />)
 

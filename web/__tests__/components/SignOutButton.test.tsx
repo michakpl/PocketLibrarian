@@ -2,16 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import SignOutButton from '@/components/SignOutButton'
 import { useRouter } from 'next/navigation'
-import {AppRouterInstance} from "next/dist/shared/lib/app-router-context.shared-runtime";
+import { createRouterMock } from '@/__tests__/helpers/routerMock'
 
 const mockReplace = vi.fn()
-vi.mocked(useRouter).mockReturnValue({
-  replace: mockReplace,
-  push: vi.fn(),
-  prefetch: vi.fn(),
-  back: vi.fn(),
-  refresh: vi.fn(),
-} as unknown as AppRouterInstance)
+
+vi.mocked(useRouter).mockReturnValue(createRouterMock({ replace: mockReplace }))
 
 describe('SignOutButton', () => {
   beforeEach(() => {

@@ -20,15 +20,19 @@ export default function AuthPage() {
       .then(async (result) => {
         if (!result) return
 
-        const account = result.account
+        const csrfResponse = await fetch('/api/auth/session')
+        const {csrfToken} = await csrfResponse.json() as {csrfToken: string}
+
         const response = await fetch('/api/auth/session', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-csrf-token': csrfToken,
+          },
           body: JSON.stringify({
-            userId: account.localAccountId,
-            name: account.name ?? account.username,
-            email: account.username,
+            idToken: result.idToken,
             accessToken: result.accessToken,
+            accessTokenExpiresAt: Math.floor((result.expiresOn?.getTime() ?? Date.now() + 3600_000) / 1000),
           }),
         })
 

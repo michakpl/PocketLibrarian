@@ -16,5 +16,9 @@ export default defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    env: {
+      NEXT_PUBLIC_E2E: 'true',
+      MICROSOFT_JWKS_URL: 'http://localhost:3000/api/auth/test-jwks',
+    },
   },
 })

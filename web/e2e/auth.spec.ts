@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { injectSession, clearSession, DEFAULT_USER } from './helpers/session'
+import { injectSession, clearSession, DEFAULT_USER, createFakeMicrosoftIdToken } from './helpers/session'
 
 // ─── Unauthenticated flows ────────────────────────────────────────────────────
 
@@ -94,29 +94,48 @@ test.describe('sign out', () => {
 // ─── Session API ──────────────────────────────────────────────────────────────
 
 test.describe('POST /api/auth/session', () => {
-  test('returns 400 for missing required fields', async ({ page }) => {
+  test('returns 400 for missing idToken', async ({ page }) => {
+    await page.goto('/auth')
+    const csrfRes = await page.request.get('/api/auth/session')
+    const { csrfToken } = await csrfRes.json()
+
     const res = await page.request.post('/api/auth/session', {
-      data: { name: 'Alice' }, // missing userId and email
-      headers: { 'Content-Type': 'application/json' },
+      data: { accessToken: 'tok', accessTokenExpiresAt: 9999999999 }, // missing idToken
+      headers: {
+        'Content-Type': 'application/json',
+        'x-csrf-token': csrfToken,
+        'origin': 'http://localhost:3000',
+      },
     })
     expect(res.status()).toBe(400)
   })
 
   test('returns 200 and sets a cookie for a valid payload', async ({ page }) => {
+    await page.goto('/auth')
+
+    const clientId = process.env.NEXT_PUBLIC_AZURE_CLIENT_ID ?? 'test-client-id'
+    const idToken = await createFakeMicrosoftIdToken(DEFAULT_USER, clientId)
+
+    const csrfRes = await page.request.get('/api/auth/session')
+    const { csrfToken } = await csrfRes.json()
+
     const res = await page.request.post('/api/auth/session', {
       data: {
-        userId: DEFAULT_USER.userId,
-        name: DEFAULT_USER.name,
-        email: DEFAULT_USER.email,
+        idToken,
         accessToken: DEFAULT_USER.accessToken,
+        accessTokenExpiresAt: DEFAULT_USER.accessTokenExpiresAt,
       },
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-csrf-token': csrfToken,
+        'origin': 'http://localhost:3000',
+      },
     })
     expect(res.status()).toBe(200)
     const body = await res.json()
     expect(body.ok).toBe(true)
 
-    // The response should carry a Set-Cookie header
+    // The response should carry a Set-Cookie header for the session
     const setCookie = res.headers()['set-cookie']
     expect(setCookie).toBeTruthy()
     expect(setCookie).toContain('pocketlibrarian.session')
