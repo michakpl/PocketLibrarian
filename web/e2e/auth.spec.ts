@@ -104,7 +104,7 @@ test.describe('POST /api/auth/session', () => {
       headers: {
         'Content-Type': 'application/json',
         'x-csrf-token': csrfToken,
-        'origin': 'http://localhost:3000',
+        'origin': 'http://localhost:3001',
       },
     })
     expect(res.status()).toBe(400)
@@ -128,7 +128,7 @@ test.describe('POST /api/auth/session', () => {
       headers: {
         'Content-Type': 'application/json',
         'x-csrf-token': csrfToken,
-        'origin': 'http://localhost:3000',
+        'origin': 'http://localhost:3001',
       },
     })
     expect(res.status()).toBe(200)

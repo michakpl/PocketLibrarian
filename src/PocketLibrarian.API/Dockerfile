@@ -24,4 +24,7 @@ EXPOSE 8080
 
 COPY --from=build /app/publish .
 
+RUN chown -R 1000:1000 /app
+USER 1000
+
 ENTRYPOINT ["dotnet", "PocketLibrarian.API.dll"]

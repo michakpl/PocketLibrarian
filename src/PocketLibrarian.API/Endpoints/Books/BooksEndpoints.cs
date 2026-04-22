@@ -1,10 +1,12 @@
 using Mediator;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using PocketLibrarian.Application.Abstractions;
 using PocketLibrarian.Application.Books;
 using PocketLibrarian.Application.Books.Commands.AddBook;
 using PocketLibrarian.Application.Books.Commands.AddBookFromIsbn;
 using PocketLibrarian.Application.Books.Commands.UpdateBook;
+using PocketLibrarian.Application.Books.Queries.GetBookById;
 using PocketLibrarian.Application.Books.Queries.GetBooks;
 
 namespace PocketLibrarian.API.Endpoints.Books;
@@ -22,6 +24,11 @@ public static class BooksEndpoints
              .RequireAuthorization("book.write")
              .WithName("AddBook")
              .WithSummary("Manually add a new book for the current user");
+        
+        group.MapGet("/{id:guid}", GetBookById)
+             .RequireAuthorization("book.read")
+             .WithName("GetBookById")
+             .WithSummary("Get a single book by ID for the current user");
 
         group.MapPut("/{id:guid}", UpdateBook)
              .RequireAuthorization("book.write")
@@ -36,11 +43,25 @@ public static class BooksEndpoints
         return group;
     }
 
-    private static async Task<Ok<IReadOnlyList<BookDto>>> GetBooks(
-        IMediator mediator, CurrentUserContext currentUser, CancellationToken cancellationToken)
+    private static async Task<Ok<PagedResult<BookDto>>> GetBooks(
+        IMediator mediator,
+        CurrentUserContext currentUser,
+        CancellationToken cancellationToken,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
-        var books = await mediator.Send(new GetBooksQuery(currentUser.OwnerId), cancellationToken);
+        var books = await mediator.Send(new GetBooksQuery(currentUser.OwnerId, page, pageSize), cancellationToken);
         return TypedResults.Ok(books);
+    }
+    
+    private static async Task<Ok<BookDto>> GetBookById(
+        Guid id,
+        IMediator mediator,
+        CurrentUserContext currentUser,
+        CancellationToken cancellationToken)
+    {
+        var book = await mediator.Send(new GetBookByIdQuery(id, currentUser.OwnerId), cancellationToken);
+        return TypedResults.Ok(book);
     }
 
     private static async Task<Created<BookDto>> AddBook(
