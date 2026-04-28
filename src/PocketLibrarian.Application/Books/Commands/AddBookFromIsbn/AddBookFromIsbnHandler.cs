@@ -49,7 +49,7 @@ public sealed class AddBookFromIsbnHandler(
         db.Books.Add(book);
         await db.SaveChangesAsync(ct);
 
-        return new BookDto(book.Id, book.OwnerId, book.Title, book.Author, book.Isbn13, book.Isbn10, null);
+        return new BookDto(book.Id, book.OwnerId, book.Title, book.Author, book.Isbn13, book.Isbn10, null, []);
     }
 }
 

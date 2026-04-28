@@ -1,57 +1,98 @@
-import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/session'
-import SignOutButton from '@/components/SignOutButton'
-import { BookOpen, Library } from 'lucide-react'
+import {BookOpen, ChevronLeft, ChevronRight, Plus} from 'lucide-react'
+import {getBooks} from "@/lib/api/books";
+import {UnauthorizedError} from "@/lib/api/errors";
+import {getSession} from "@/lib/session";
+import {redirect} from "next/navigation";
+import Link from "next/link";
+import Book from "@/components/Book";
 
-export default async function LibraryPage() {
-  const session = await getSession()
-  if (!session) {
-    redirect('/auth')
-  }
+interface Props {
+    searchParams: Promise<{ page?: string; pageSize?: string }>
+}
 
-  // let books
-  // try {
-  //   books = await getBooks(session.accessToken)
-  // } catch (err) {
-  //   if (err instanceof UnauthorizedError) {
-  //     redirect('/auth/refresh?callbackUrl=/library')
-  //   }
-  //   throw err
-  // }
+export default async function LibraryPage({searchParams}: Props) {
+    const session = await getSession()
+    if (!session) redirect('/auth')
 
-  return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-blue-950 to-slate-900">
-      <header className="border-b border-white/10 bg-white/5 backdrop-blur-sm">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-500">
-              <BookOpen className="w-5 h-5 text-white" />
+    const {page: pageParam, pageSize: pageSizeParam} = await searchParams
+    const parsedPageParam = Number(pageParam ?? 1)
+    const page = Number.isFinite(parsedPageParam) ? Math.max(1, parsedPageParam) : 1
+    const parsedPageSizeParam = Number(pageSizeParam ?? 20)
+    const pageSize = Number.isFinite(parsedPageSizeParam) ? Math.max(1, parsedPageSizeParam) : 20
+
+    let result
+    try {
+        result = await getBooks(session.accessToken, {page, pageSize})
+    } catch (err) {
+        if (err instanceof UnauthorizedError) {
+            redirect('/auth/refresh?callbackUrl=/library')
+        }
+        throw err
+    }
+
+    const {items: books, totalCount, hasNextPage, hasPreviousPage, totalPages} = result
+
+    return (
+        <div className="p-6 max-w-7xl mx-auto flex flex-col gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 className="text-slate-900 text-2xl">Books</h1>
+                    <p className="text-slate-500 text-sm mt-0.5">{totalCount} books in your library</p>
+                </div>
+                <Link
+                    href="/library/books/add"
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm transition-colors"
+                >
+                    <Plus className="w-4 h-4" />
+                    Add Book
+                </Link>
             </div>
-            <span className="text-white font-semibold">PocketLibrarian</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-slate-400 text-sm hidden sm:block">{session.email}</span>
-            <SignOutButton />
-          </div>
-        </div>
-      </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-12">
-        <div className="mb-10">
-          <h1 className="text-white text-3xl font-semibold mb-1">
-            Welcome back, {session.name.split(' ')[0]}
-          </h1>
-          <p className="text-slate-400">Your personal book collection</p>
-        </div>
+            {totalCount > 0 ? (
+                <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {books.map((book) => (
+                            <Book key={book.id} book={book}/>
+                        ))}
+                    </div>
 
-        <div className="rounded-2xl bg-white/5 border border-white/10 p-12 text-center">
-          <Library className="w-12 h-12 text-slate-500 mx-auto mb-4" />
-          <h2 className="text-white text-xl font-medium mb-2">Your library is empty</h2>
-          <p className="text-slate-400 text-sm">
-            Start adding books to build your collection.
-          </p>
+                    <div className="flex items-center justify-between border-t border-slate-200 pt-4">
+                        <p className="text-sm text-slate-500">
+                            {totalCount} book{totalCount !== 1 ? 's' : ''} total
+                            {totalPages ? ` · page ${page} of ${totalPages}` : ''}
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <Link
+                                href={hasPreviousPage ? `/library?page=${page - 1}&pageSize=${pageSize}` : '#'}
+                                aria-disabled={!hasPreviousPage}
+                                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                                    hasPreviousPage
+                                        ? 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                                        : 'border-slate-100 text-slate-300 pointer-events-none'
+                                }`}
+                            >
+                                <ChevronLeft className="w-4 h-4"/> Previous
+                            </Link>
+                            <Link
+                                href={hasNextPage ? `/library?page=${page + 1}&pageSize=${pageSize}` : '#'}
+                                aria-disabled={!hasNextPage}
+                                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                                    hasNextPage
+                                        ? 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                                        : 'border-slate-100 text-slate-300 pointer-events-none'
+                                }`}
+                            >
+                                Next <ChevronRight className="w-4 h-4"/>
+                            </Link>
+                        </div>
+                    </div>
+                </>
+            ) : (
+                <div className="text-center py-16 text-slate-400">
+                    <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-30"/>
+                    <p className="text-sm">No books found</p>
+                </div>
+            )}
         </div>
-      </main>
-    </div>
-  )
+    )
 }

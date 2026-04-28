@@ -33,9 +33,6 @@ artifacts/
 *.snupkg
 **/[Pp]ackages/*
 
-# NuGet Symbol Packages
-*.snupkg
-
 # NuGet package restore lockfiles
 packages.lock.json
 
@@ -220,8 +217,6 @@ FodyWeavers.xsd
 *.msm
 *.msp
 
-# JetBrains Rider
-*.sln.iml
 # Local secrets
 .env
 .env.local

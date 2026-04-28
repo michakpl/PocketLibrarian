@@ -12,7 +12,7 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env.local'), override: true 
 const SECRET = process.env.SESSION_SECRET
 if (!SECRET) throw new Error('SESSION_SECRET not found — check .env')
 
-const BASE_URL = 'http://localhost:3000'
+const BASE_URL = 'http://localhost:3001'
 const SESSION_COOKIE = 'pocketlibrarian.session'
 const SESSION_DURATION_S = 7 * 24 * 60 * 60
 
@@ -25,7 +25,7 @@ export interface FakeUser {
 }
 
 export const DEFAULT_USER: FakeUser = {
-  userId: 'e2e-user-00000000',
+  userId: randomUUID(),
   name: 'E2E Tester',
   email: 'e2e@pocketlibrarian.test',
   accessToken: 'fake-access-token',

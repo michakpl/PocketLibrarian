@@ -134,5 +134,74 @@ public sealed class GetLocationsHandlerTests : IDisposable
         Assert.Single(result);
         Assert.Null(result[0].ParentId);
     }
+
+    [Fact]
+    public async Task Handle_RootLocation_HasSingleElementLocationPath()
+    {
+        var location = Location.Create("Library", "Home library", "LIB01", _ownerId);
+        _db.Locations.Add(location);
+        await _db.SaveChangesAsync();
+
+        var result = await _handler.Handle(new GetLocationsQuery(_ownerId), CancellationToken.None);
+
+        Assert.Single(result);
+        Assert.Equal(["Library"], result[0].LocationPath);
+    }
+
+    [Fact]
+    public async Task Handle_ChildLocation_HasTwoElementLocationPath()
+    {
+        var parent = Location.Create("Shelf", "A shelf", "SHELF", _ownerId);
+        _db.Locations.Add(parent);
+        await _db.SaveChangesAsync();
+
+        var child = Location.Create("Section A", "Section on shelf", "SEC-A", _ownerId, parent.Id);
+        _db.Locations.Add(child);
+        await _db.SaveChangesAsync();
+
+        var result = await _handler.Handle(new GetLocationsQuery(_ownerId), CancellationToken.None);
+
+        var childDto = result.Single(dto => dto.Id == child.Id);
+        Assert.Equal(["Shelf", "Section A"], childDto.LocationPath);
+    }
+
+    [Fact]
+    public async Task Handle_ThreeLevelHierarchy_ReturnsFullLocationPath()
+    {
+        var room = Location.Create("Study", "Study room", "STUDY", _ownerId);
+        _db.Locations.Add(room);
+        await _db.SaveChangesAsync();
+
+        var shelf = Location.Create("Shelf C", "Shelf in study", "SHELF-C", _ownerId, room.Id);
+        _db.Locations.Add(shelf);
+        await _db.SaveChangesAsync();
+
+        var box = Location.Create("Box 1", "First box", "BOX-1", _ownerId, shelf.Id);
+        _db.Locations.Add(box);
+        await _db.SaveChangesAsync();
+
+        var result = await _handler.Handle(new GetLocationsQuery(_ownerId), CancellationToken.None);
+
+        var boxDto = result.Single(dto => dto.Id == box.Id);
+        Assert.Equal(["Study", "Shelf C", "Box 1"], boxDto.LocationPath);
+    }
+
+    [Fact]
+    public async Task Handle_HierarchicalLocations_ReturnedInParentBeforeChildOrder()
+    {
+        var parent = Location.Create("Parent", "Parent location", "PARENT", _ownerId);
+        _db.Locations.Add(parent);
+        await _db.SaveChangesAsync();
+
+        var child = Location.Create("Child", "Child location", "CHILD", _ownerId, parent.Id);
+        _db.Locations.Add(child);
+        await _db.SaveChangesAsync();
+
+        var result = await _handler.Handle(new GetLocationsQuery(_ownerId), CancellationToken.None);
+
+        var parentIndex = result.ToList().FindIndex(dto => dto.Id == parent.Id);
+        var childIndex = result.ToList().FindIndex(dto => dto.Id == child.Id);
+        Assert.True(parentIndex < childIndex);
+    }
 }
 

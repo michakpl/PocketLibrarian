@@ -5,4 +5,5 @@ export interface LocationDto {
   description: string
   code: string
   parentId: string | null
+  locationPath: string[] | null
 }

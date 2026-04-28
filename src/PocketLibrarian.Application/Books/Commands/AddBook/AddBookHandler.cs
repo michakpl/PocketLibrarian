@@ -2,7 +2,6 @@ using Mediator;
 using Microsoft.EntityFrameworkCore;
 using PocketLibrarian.Application.Abstractions;
 using PocketLibrarian.Application.Exceptions;
-using PocketLibrarian.Application.Locations;
 using PocketLibrarian.Domain.Entities;
 
 namespace PocketLibrarian.Application.Books.Commands.AddBook;
@@ -27,10 +26,10 @@ public sealed class AddBookHandler(IApplicationDbContext db)
         db.Books.Add(book);
         await db.SaveChangesAsync(ct);
 
+        var locationPath = await BookDtoFactory.BuildLocationPathAsync(db, cmd.LocationId, cmd.OwnerId, ct);
+
         return new BookDto(book.Id, book.OwnerId, book.Title, book.Author, book.Isbn13, book.Isbn10,
-            location != null
-                ? new LocationDto(location.Id, location.OwnerId, location.Name, location.Description, location.Code,
-                    location.ParentId)
-                : null);
+            BookDtoFactory.ToLocationDto(location),
+            locationPath);
     }
 }
