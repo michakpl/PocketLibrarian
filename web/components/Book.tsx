@@ -33,9 +33,9 @@ export default function Book({book}: { book: BookDto }) {
             </div>
             <div className="flex items-center gap-2 text-xs text-slate-500">
                 <MapPin className="w-3.5 h-3.5 shrink-0 text-slate-400"/>
-                <span className="truncate" title={book.locationPath?.join(' › ')}>
-                      {book.locationPath?.join(' › ')}
-                    </span>
+                <span className="truncate" title={book.locationPath ? book.locationPath.join(' › ') : '-'}>
+                  {book.locationPath ? book.locationPath?.join(' › ') : '-'}
+                </span>
             </div>
         </div>
 
@@ -69,7 +69,7 @@ export default function Book({book}: { book: BookDto }) {
                     onClick={() => setDeleteConfirm(book.id)}
                     className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-red-600 transition-colors px-2 py-1 rounded hover:bg-red-50 ml-auto"
                 >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-3.5 h-3.5"/>
                     Delete
                 </button>
             )}

@@ -4,11 +4,12 @@ import { getBook } from '@/lib/api/books'
 import { getLocations } from '@/lib/api/locations'
 import { getSession } from '@/lib/session'
 import EditBookForm from "@/components/BookForm";
+import {redirect} from "next/navigation";
 
 export default async function EditBook({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const session = await getSession()
-  if (!session) return null
+  if (!session) redirect('/auth')
 
   const [book, locations] = await Promise.all([
     getBook(session.accessToken, id),

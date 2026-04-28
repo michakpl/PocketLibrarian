@@ -3,12 +3,22 @@ import { ArrowLeft, BookPlus } from 'lucide-react'
 import { getLocations } from '@/lib/api/locations'
 import { getSession } from '@/lib/session'
 import BookForm from '@/components/BookForm'
+import {redirect} from "next/navigation";
+import {UnauthorizedError} from "@/lib/api/errors";
 
 export default async function AddBook() {
   const session = await getSession()
-  if (!session) return null
+  if (!session) redirect('/auth')
 
-  const locations = await getLocations(session.accessToken)
+  let locations
+  try {
+    locations = await getLocations(session.accessToken)
+  } catch (err) {
+    if (err instanceof UnauthorizedError) {
+      redirect('/auth/refresh?callbackUrl=/library')
+    }
+    throw err
+  }
 
   return (
     <div className="p-6 max-w-2xl mx-auto">

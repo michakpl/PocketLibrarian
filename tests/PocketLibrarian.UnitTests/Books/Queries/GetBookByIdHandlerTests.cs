@@ -56,24 +56,23 @@ public sealed class GetBookByIdHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task Handle_BookDoesNotExist_ThrowsInvalidOperationException()
+    public async Task Handle_BookDoesNotExist_ThrowsNotFoundException()
     {
         var query = new GetBookByIdQuery(Guid.NewGuid(), _ownerId);
 
-        // SingleAsync throws InvalidOperationException when no element found
-        await Assert.ThrowsAsync<InvalidOperationException>(
+        await Assert.ThrowsAsync<NotFoundException>(
             () => _handler.Handle(query, CancellationToken.None).AsTask());
     }
 
     [Fact]
-    public async Task Handle_BookBelongsToDifferentOwner_ThrowsInvalidOperationException()
+    public async Task Handle_BookBelongsToDifferentOwner_ThrowsNotFoundException()
     {
         var otherOwnerId = Guid.NewGuid();
         var book = Book.Create("Their Book", "Their Author", otherOwnerId);
         _db.Books.Add(book);
         await _db.SaveChangesAsync();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(
+        await Assert.ThrowsAsync<NotFoundException>(
             () => _handler.Handle(new GetBookByIdQuery(book.Id, _ownerId), CancellationToken.None).AsTask());
     }
 

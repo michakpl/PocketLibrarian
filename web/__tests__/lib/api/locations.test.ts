@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { getLocations } from '@/lib/api/locations'
-import { UnauthorizedError } from '@/lib/api/books'
+import { UnauthorizedError } from '@/lib/api/errors'
 
 const MOCK_LOCATIONS = [
   {

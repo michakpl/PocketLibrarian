@@ -201,7 +201,7 @@ describe('LibraryPage — pagination', () => {
   })
 
   it('redirects to /auth/refresh on UnauthorizedError', async () => {
-    const { UnauthorizedError } = await import('@/lib/api/books')
+    const { UnauthorizedError } = await import('@/lib/api/errors')
     vi.mocked(getBooks).mockRejectedValue(new UnauthorizedError())
 
     await LibraryPage({ searchParams: makeSearchParams() }).catch(() => {})

@@ -1,13 +1,7 @@
 import 'server-only'
 import type { BookDto, PagedResult } from '@/lib/types/book'
 import {BookDtoSchema, PagedResultOfBookDtoSchema} from '@/lib/types/schemas'
-
-export class UnauthorizedError extends Error {
-  constructor() {
-    super('Access token rejected by API (401)')
-    this.name = 'UnauthorizedError'
-  }
-}
+import {UnauthorizedError} from "@/lib/api/errors";
 
 export interface GetBooksParams {
   page?: number

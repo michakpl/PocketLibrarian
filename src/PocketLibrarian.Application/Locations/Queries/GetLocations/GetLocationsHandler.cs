@@ -18,12 +18,13 @@ public sealed class GetLocationsHandler(IApplicationDbContext db)
             l => l.Id,
             l => (l.Name, l.ParentId));
 
+        var rawById = raw.ToDictionary(l => l.Id);
         var sorted = SortHierarchically(raw.Select(l => (l.Id, l.ParentId)).ToList());
 
         return sorted
             .Select(id =>
             {
-                var l = raw.First(x => x.Id == id);
+                var l = rawById[id];
                 return new LocationDto(l.Id, l.OwnerId, l.Name, l.Description, l.Code, l.ParentId,
                     BuildLocationPath(l.Id, locationMap));
             })
@@ -74,7 +75,8 @@ public sealed class GetLocationsHandler(IApplicationDbContext db)
     {
         var path = new List<string>();
         Guid? current = locationId;
-        while (current.HasValue && locationMap.TryGetValue(current.Value, out var loc))
+        var visited = new HashSet<Guid>();
+        while (current.HasValue && visited.Add(current.Value) && locationMap.TryGetValue(current.Value, out var loc))
         {
             path.Add(loc.Name);
             current = loc.ParentId;

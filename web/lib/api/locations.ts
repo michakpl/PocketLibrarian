@@ -2,7 +2,7 @@ import 'server-only'
 import type { LocationDto } from '@/lib/types/location'
 import { LocationDtoSchema } from '@/lib/types/schemas'
 import { z } from 'zod'
-import { UnauthorizedError } from './books'
+import { UnauthorizedError } from './errors'
 
 export async function getLocations(accessToken: string): Promise<LocationDto[]> {
   const apiUrl = process.env.API_URL

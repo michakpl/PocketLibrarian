@@ -6,7 +6,18 @@ public sealed record PagedResult<T>(
     int PageSize,
     int TotalCount)
 {
-    public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
+    public int TotalPages
+    {
+        get
+        {
+            if (PageSize < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(PageSize));
+            }
+            
+            return (int) Math.Ceiling(TotalCount / (double) PageSize);
+        }
+    }
     public bool HasPreviousPage => Page > 1;
     public bool HasNextPage => Page < TotalPages;
 }

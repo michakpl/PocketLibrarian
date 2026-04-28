@@ -2,7 +2,6 @@ using Mediator;
 using Microsoft.EntityFrameworkCore;
 using PocketLibrarian.Application.Abstractions;
 using PocketLibrarian.Application.Exceptions;
-using PocketLibrarian.Application.Locations;
 using PocketLibrarian.Domain.Entities;
 
 namespace PocketLibrarian.Application.Books.Commands.AddBook;
@@ -27,35 +26,10 @@ public sealed class AddBookHandler(IApplicationDbContext db)
         db.Books.Add(book);
         await db.SaveChangesAsync(ct);
 
-        var locationPath = await BuildLocationPathAsync(db, cmd.LocationId, cmd.OwnerId, ct);
+        var locationPath = await BookDtoFactory.BuildLocationPathAsync(db, cmd.LocationId, cmd.OwnerId, ct);
 
         return new BookDto(book.Id, book.OwnerId, book.Title, book.Author, book.Isbn13, book.Isbn10,
-            location != null
-                ? new LocationDto(location.Id, location.OwnerId, location.Name, location.Description, location.Code,
-                    location.ParentId)
-                : null,
+            BookDtoFactory.ToLocationDto(location),
             locationPath);
-    }
-
-    private static async ValueTask<IReadOnlyList<string>> BuildLocationPathAsync(
-        IApplicationDbContext db, Guid? locationId, Guid ownerId, CancellationToken ct)
-    {
-        if (locationId is null) return [];
-
-        var locationMap = await db.Locations
-            .Where(l => l.OwnerId == ownerId)
-            .Select(l => new { l.Id, l.Name, l.ParentId })
-            .ToListAsync(ct)
-            .ContinueWith(t => t.Result.ToDictionary(l => l.Id, l => (l.Name, l.ParentId)), ct);
-
-        var path = new List<string>();
-        var current = locationId;
-        while (current.HasValue && locationMap.TryGetValue(current.Value, out var loc))
-        {
-            path.Add(loc.Name);
-            current = loc.ParentId;
-        }
-        path.Reverse();
-        return path;
     }
 }

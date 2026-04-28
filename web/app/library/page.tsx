@@ -1,5 +1,6 @@
 import {BookOpen, ChevronLeft, ChevronRight, Plus} from 'lucide-react'
-import {getBooks, UnauthorizedError} from "@/lib/api/books";
+import {getBooks} from "@/lib/api/books";
+import {UnauthorizedError} from "@/lib/api/errors";
 import {getSession} from "@/lib/session";
 import {redirect} from "next/navigation";
 import Link from "next/link";
@@ -14,8 +15,10 @@ export default async function LibraryPage({searchParams}: Props) {
     if (!session) redirect('/auth')
 
     const {page: pageParam, pageSize: pageSizeParam} = await searchParams
-    const page = Math.max(1, Number(pageParam ?? 1))
-    const pageSize = Math.max(1, Number(pageSizeParam ?? 20))
+    const parsedPageParam = Number(pageParam ?? 1)
+    const page = Number.isFinite(parsedPageParam) ? Math.max(1, parsedPageParam) : 1
+    const parsedPageSizeParam = Number(pageSizeParam ?? 20)
+    const pageSize = Number.isFinite(parsedPageSizeParam) ? Math.max(1, parsedPageSizeParam) : 20
 
     let result
     try {
@@ -34,7 +37,7 @@ export default async function LibraryPage({searchParams}: Props) {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 className="text-slate-900 text-2xl">Books</h1>
-                    <p className="text-slate-500 text-sm mt-0.5">{books.length} books in your library</p>
+                    <p className="text-slate-500 text-sm mt-0.5">{totalCount} books in your library</p>
                 </div>
                 <Link
                     href="/library/books/add"
@@ -45,7 +48,7 @@ export default async function LibraryPage({searchParams}: Props) {
                 </Link>
             </div>
 
-            {books.length > 0 ? (
+            {totalCount > 0 ? (
                 <>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {books.map((book) => (
@@ -60,7 +63,7 @@ export default async function LibraryPage({searchParams}: Props) {
                         </p>
                         <div className="flex items-center gap-2">
                             <Link
-                                href={`/library?page=${page - 1}&pageSize=${pageSize}`}
+                                href={hasPreviousPage ? `/library?page=${page - 1}&pageSize=${pageSize}` : '#'}
                                 aria-disabled={!hasPreviousPage}
                                 className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm border transition-colors ${
                                     hasPreviousPage
@@ -71,7 +74,7 @@ export default async function LibraryPage({searchParams}: Props) {
                                 <ChevronLeft className="w-4 h-4"/> Previous
                             </Link>
                             <Link
-                                href={`/library?page=${page + 1}&pageSize=${pageSize}`}
+                                href={hasNextPage ? `/library?page=${page + 1}&pageSize=${pageSize}` : '#'}
                                 aria-disabled={!hasNextPage}
                                 className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm border transition-colors ${
                                     hasNextPage

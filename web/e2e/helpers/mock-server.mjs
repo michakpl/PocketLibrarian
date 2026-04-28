@@ -73,9 +73,19 @@ const server = http.createServer(async (req, res) => {
 
   // ── API request matching ───────────────────────────────────────────────────
 
-  const idx = handlers.findIndex(
-    (h) => h.method === method && url.startsWith(h.path),
-  )
+  const urlPath = url.split('?')[0]
+
+  const candidates = handlers
+    .map((h, i) => ({ h, i }))
+    .filter(({ h }) => h.method === method && urlPath.startsWith(h.path))
+    .sort((a, b) => {
+      const aExact = urlPath === a.h.path ? 1 : 0
+      const bExact = urlPath === b.h.path ? 1 : 0
+      if (bExact !== aExact) return bExact - aExact
+      return b.h.path.length - a.h.path.length
+    })
+
+  const idx = candidates.length > 0 ? candidates[0].i : -1
 
   if (idx === -1) {
     console.warn(`[mock-server] No handler for ${method} ${url}`)
