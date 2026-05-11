@@ -41,18 +41,23 @@ function createRedisMock(): Redis {
 
 function createRedisClient(): Redis {
   const url = process.env.REDIS_URL ?? 'redis://localhost:6379'
-  const client = new Redis(url, { lazyConnect: true, maxRetriesPerRequest: 3 })
+  const client = new Redis(url, {
+    lazyConnect: true,
+    maxRetriesPerRequest: 3,
+    retryStrategy: (times) => Math.min(times * 1000, 30_000),
+  })
   client.on('error', (err) => {
     console.error('[redis] connection error', err)
   })
   return client
 }
 
-// Reuse the connection across hot-reloads in dev
-const redis: Redis =
-  process.env.NEXT_PUBLIC_E2E === 'true'
-    ? (globalThis.__redis ?? createRedisMock())
-    : (globalThis.__redis ?? createRedisClient())
-if (process.env.NODE_ENV !== 'production') globalThis.__redis = redis
+const redis: Redis | null = (() => {
+  if (process.env.REDIS_ENABLED === 'false') return null
+  if (globalThis.__redis) return globalThis.__redis
+  const client = process.env.NEXT_PUBLIC_E2E === 'true' ? createRedisMock() : createRedisClient()
+  globalThis.__redis = client
+  return client
+})()
 
 export default redis

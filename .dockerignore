@@ -6,3 +6,9 @@
 **/obj
 **/*.user
 **/TestResults
+
+# Directories not needed for the API image
+web/
+tests/
+tf/
+

@@ -4,6 +4,7 @@ using PocketLibrarian.Application.Abstractions;
 using PocketLibrarian.Application.Books.Commands.AddBookFromIsbn;
 using PocketLibrarian.Application.Exceptions;
 using PocketLibrarian.Application.IsbnLookup;
+using PocketLibrarian.Domain.Entities;
 using PocketLibrarian.Domain.ValueObjects;
 using PocketLibrarian.Infrastructure.Persistence;
 
@@ -13,7 +14,6 @@ public sealed class AddBookFromIsbnHandlerTests : IDisposable
 {
     private readonly AppDbContext _db;
     private readonly IBookMetadataProvider _provider;
-    private readonly IIsbnCacheService _cache;
     private readonly AddBookFromIsbnHandler _handler;
     private readonly Guid _ownerId = Guid.NewGuid();
 
@@ -39,23 +39,20 @@ public sealed class AddBookFromIsbnHandlerTests : IDisposable
         _db = new AppDbContext(options, userContext);
 
         _provider = Substitute.For<IBookMetadataProvider>();
-        _cache = Substitute.For<IIsbnCacheService>();
 
-        _handler = new AddBookFromIsbnHandler(_db, _provider, _cache);
+        _handler = new AddBookFromIsbnHandler(_db, _provider);
     }
 
     public void Dispose() => _db.Dispose();
 
-    // ── Cache miss path ────────────────────────────────────────────────────────
+    // ── No existing DB record path ─────────────────────────────────────────────
 
     [Fact]
-    public async Task Handle_CacheMiss_LooksUpMetadataAndReturnsBookDto()
+    public async Task Handle_NoExistingBook_LooksUpMetadataAndReturnsBookDto()
     {
         var metadata = new BookMetadata("Dune", null, ["Frank Herbert"], "Chilton Books",
             "1965", null, 412, "en", null, ValidIsbn13, null);
 
-        _cache.TryGetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-              .Returns(new ValueTask<(bool IsCached, BookMetadata? Value)>((false, (BookMetadata?)null)));
         _provider.LookupAsync(Arg.Any<Isbn>(), Arg.Any<CancellationToken>())
                  .Returns(metadata);
 
@@ -70,12 +67,10 @@ public sealed class AddBookFromIsbnHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task Handle_CacheMiss_PersistsBookToDatabase()
+    public async Task Handle_NoExistingBook_PersistsBookToDatabase()
     {
         var metadata = new BookMetadata("Dune", null, ["Frank Herbert"], null, null, null, null, null, null, ValidIsbn13, null);
 
-        _cache.TryGetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-              .Returns(new ValueTask<(bool IsCached, BookMetadata? Value)>((false, (BookMetadata?)null)));
         _provider.LookupAsync(Arg.Any<Isbn>(), Arg.Any<CancellationToken>())
                  .Returns(metadata);
 
@@ -88,25 +83,8 @@ public sealed class AddBookFromIsbnHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task Handle_CacheMiss_SetsCache()
+    public async Task Handle_NoExistingBook_NotFoundByProvider_ThrowsNotFoundException()
     {
-        var metadata = new BookMetadata("Dune", null, ["Frank Herbert"], null, null, null, null, null, null, ValidIsbn13, null);
-
-        _cache.TryGetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-              .Returns(new ValueTask<(bool IsCached, BookMetadata? Value)>((false, (BookMetadata?)null)));
-        _provider.LookupAsync(Arg.Any<Isbn>(), Arg.Any<CancellationToken>())
-                 .Returns(metadata);
-
-        await _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13), CancellationToken.None);
-
-        await _cache.Received(1).SetAsync(Arg.Any<string>(), metadata, Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task Handle_CacheMiss_NotFoundByProvider_ThrowsNotFoundException()
-    {
-        _cache.TryGetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-              .Returns(new ValueTask<(bool IsCached, BookMetadata? Value)>((false, (BookMetadata?)null)));
         _provider.LookupAsync(Arg.Any<Isbn>(), Arg.Any<CancellationToken>())
                  .Returns((BookMetadata?)null);
 
@@ -114,15 +92,15 @@ public sealed class AddBookFromIsbnHandlerTests : IDisposable
             _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13), CancellationToken.None).AsTask());
     }
 
-    // ── Cache hit path ─────────────────────────────────────────────────────────
+    // ── Existing DB record path ────────────────────────────────────────────────
 
     [Fact]
-    public async Task Handle_CacheHit_DoesNotCallProvider()
+    public async Task Handle_ExistingBookInDb_DoesNotCallProvider()
     {
-        var metadata = new BookMetadata("Dune", null, ["Frank Herbert"], null, null, null, null, null, null, ValidIsbn13, null);
-
-        _cache.TryGetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-              .Returns(new ValueTask<(bool IsCached, BookMetadata? Value)>((true, metadata)));
+        var existingBook = Book.Create("Dune", "Frank Herbert", Guid.NewGuid(), ValidIsbn13);
+        _db.Books.Add(existingBook);
+        await _db.SaveChangesAsync();
+        _db.ChangeTracker.Clear();
 
         await _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13), CancellationToken.None);
 
@@ -130,27 +108,35 @@ public sealed class AddBookFromIsbnHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task Handle_CacheHit_ReturnsBookDtoFromCachedMetadata()
+    public async Task Handle_ExistingBookInDb_ReturnsBookDtoFromExistingRecord()
     {
-        var metadata = new BookMetadata("Dune", null, ["Frank Herbert"], null, null, null, null, null, null, ValidIsbn13, null);
-
-        _cache.TryGetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-              .Returns(new ValueTask<(bool IsCached, BookMetadata? Value)>((true, metadata)));
+        var existingBook = Book.Create("Dune", "Frank Herbert", Guid.NewGuid(), ValidIsbn13);
+        _db.Books.Add(existingBook);
+        await _db.SaveChangesAsync();
+        _db.ChangeTracker.Clear();
 
         var result = await _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13), CancellationToken.None);
 
         Assert.Equal("Dune", result.Title);
         Assert.Equal("Frank Herbert", result.Author);
+        Assert.Equal(_ownerId, result.OwnerId);
     }
 
     [Fact]
-    public async Task Handle_CacheHitWithNullSentinel_ThrowsNotFoundException()
+    public async Task Handle_ExistingBookInDb_PersistsNewBookForCurrentOwner()
     {
-        _cache.TryGetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-              .Returns(new ValueTask<(bool IsCached, BookMetadata? Value)>((true, (BookMetadata?)null)));
+        var existingBook = Book.Create("Dune", "Frank Herbert", Guid.NewGuid(), ValidIsbn13, "044101359X");
+        _db.Books.Add(existingBook);
+        await _db.SaveChangesAsync();
+        _db.ChangeTracker.Clear();
 
-        await Assert.ThrowsAsync<NotFoundException>(() =>
-            _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13), CancellationToken.None).AsTask());
+        var result = await _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13), CancellationToken.None);
+
+        _db.ChangeTracker.Clear();
+        var saved = await _db.Books.IgnoreQueryFilters().SingleAsync(b => b.Id == result.Id);
+        Assert.Equal(_ownerId, saved.OwnerId);
+        Assert.Equal("Dune", saved.Title);
+        Assert.Equal("044101359X", saved.Isbn10);
     }
 
     // ── Author formatting ──────────────────────────────────────────────────────
@@ -161,8 +147,6 @@ public sealed class AddBookFromIsbnHandlerTests : IDisposable
         var metadata = new BookMetadata("Good Omens", null, ["Terry Pratchett", "Neil Gaiman"],
             null, null, null, null, null, null, ValidIsbn13, null);
 
-        _cache.TryGetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-              .Returns(new ValueTask<(bool IsCached, BookMetadata? Value)>((false, (BookMetadata?)null)));
         _provider.LookupAsync(Arg.Any<Isbn>(), Arg.Any<CancellationToken>())
                  .Returns(metadata);
 
@@ -176,8 +160,6 @@ public sealed class AddBookFromIsbnHandlerTests : IDisposable
     {
         var metadata = new BookMetadata("Untitled", null, [], null, null, null, null, null, null, ValidIsbn13, null);
 
-        _cache.TryGetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-              .Returns(new ValueTask<(bool IsCached, BookMetadata? Value)>((false, (BookMetadata?)null)));
         _provider.LookupAsync(Arg.Any<Isbn>(), Arg.Any<CancellationToken>())
                  .Returns(metadata);
 

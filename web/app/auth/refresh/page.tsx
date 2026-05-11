@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
 import { useMsal } from '@azure/msal-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { loginRequest } from '@/lib/msal-config'
 import { Loader2 } from 'lucide-react'
 
-export default function RefreshPage() {
+function RefreshLoader() {
   const { instance, accounts } = useMsal()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -65,6 +65,23 @@ export default function RefreshPage() {
         <p className="text-sm">Refreshing your session…</p>
       </div>
     </div>
+  )
+}
+
+export default function RefreshPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-slate-900">
+          <div className="flex flex-col items-center gap-4 text-slate-400">
+            <Loader2 className="w-8 h-8 animate-spin" />
+            <p className="text-sm">Refreshing your session…</p>
+          </div>
+        </div>
+      }
+    >
+      <RefreshLoader />
+    </Suspense>
   )
 }
 
