@@ -21,8 +21,4 @@
     <ProjectReference Include="..\PocketLibrarian.Domain\PocketLibrarian.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Remove="IsbnLookup\IIsbnCacheService.cs" />
-  </ItemGroup>
-
 </Project>

@@ -12,13 +12,13 @@ name_prefix = "pcktlib"
 sql_admin_login    = "sqladmin"
 sql_admin_password = "REPLACE_ME_STRONG_PASSWORD_Abc123!"
 
-# ── Microsoft Entra ID ──x──────────────────────────────────────────────────────
+# ── Microsoft Entra ID ───────────────────────────────────────────────────────
 # App registration client IDs from the Azure portal
 api_entraid_client_id = "REPLACE_ME_API_CLIENT_ID"
 web_entraid_client_id = "REPLACE_ME_WEB_CLIENT_ID"
 
 # Client secret from the API app registration (Certificates & secrets)
-api_entraid_client_secret = "REPLACE_ME_WEB_CLIENT_SECRET"
+api_entraid_client_secret = "REPLACE_ME_API_CLIENT_SECRET"
 
 # Audience for the API app registration
 api_entraid_audience = "REPLACE_ME_API_AUDIENCE"

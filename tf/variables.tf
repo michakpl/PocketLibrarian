@@ -86,7 +86,7 @@ variable "web_session_secret" {
 # ── Feature flags ─────────────────────────────────────────────────────────────
 
 variable "enable_redis_cache" {
-  description = "Create Azure Cache for Redis and wire it to both container apps. Set to false to skip Redis (saves cost for dev/hobby deployments)."
+  description = "Create Azure Cache for Redis and wire it to the web container app. Set to false to skip Redis (saves cost for dev/hobby deployments)."
   type        = bool
   default     = false
 }

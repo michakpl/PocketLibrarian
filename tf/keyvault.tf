@@ -97,3 +97,10 @@ resource "azurerm_key_vault_secret" "web_entraid_scope_base" {
   value        = var.web_entraid_scope_base
   depends_on   = [azurerm_key_vault_access_policy.terraform_deployer]
 }
+
+resource "azurerm_key_vault_secret" "app_insights_connection_string" {
+  name         = "app-insights-connection-string"
+  key_vault_id = azurerm_key_vault.main.id
+  value        = azurerm_application_insights.main.connection_string
+  depends_on   = [azurerm_key_vault_access_policy.terraform_deployer]
+}

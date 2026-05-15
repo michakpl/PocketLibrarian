@@ -8,17 +8,19 @@ terraform {
     }
   }
 
-  # Uncomment and populate after creating the state storage account:
+  # Configure the remote state backend after creating the state storage account:
   #   az group create -n rg-pocketlibrarian-tfstate -l westeurope
   #   az storage account create -n stpocketlibtf -g rg-pocketlibrarian-tfstate --sku Standard_LRS
   #   az storage container create -n tfstate --account-name stpocketlibtf
   #
-  backend "azurerm" {
-    resource_group_name  = "rg-pocketlibrarian-tfstate"
-    storage_account_name = "stpocketlibtf"
-    container_name       = "tfstate"
-    key                  = "pocketlibrarian.tfstate"
-  }
+
+  # Then initialize Terraform with backend settings, for example:
+  #   terraform init \
+  #     -backend-config="resource_group_name=rg-pocketlibrarian-tfstate" \
+  #     -backend-config="storage_account_name=stpocketlibtf" \
+  #     -backend-config="container_name=tfstate" \
+  #     -backend-config="key=pocketlibrarian.tfstate"
+  backend "azurerm" {}
 }
 
 provider "azurerm" {

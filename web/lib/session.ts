@@ -1,14 +1,14 @@
 import 'server-only'
-import {SignJWT, jwtVerify} from 'jose'
+import {EncryptJWT, jwtDecrypt} from 'jose'
 import {cookies} from 'next/headers'
 import {randomUUID} from 'crypto'
 import redis from '@/lib/redis'
 
 export {isAccessTokenExpired} from '@/lib/session-utils'
 
-// When REDIS_ENABLED=false, the access token is embedded in the encrypted cookie
-// instead of being stored in Redis. The cookie is httpOnly + encrypted (HS256),
-// so the token is not exposed to the browser.
+// When REDIS_ENABLED=false, the access token is embedded in the cookie using
+// JWE (EncryptJWT, dir/A256GCM). The cookie is httpOnly + encrypted, so the
+// token payload is not readable by the browser or any party without SESSION_SECRET.
 const redisEnabled = redis !== null
 
 export interface SessionPayload {
@@ -37,23 +37,23 @@ const REDIS_KEY_PREFIX = 'session:'
 function getEncodedKey(): Uint8Array {
     const secretKey = process.env.SESSION_SECRET
     if (!secretKey) throw new Error('SESSION_SECRET environment variable is not set')
-    return new TextEncoder().encode(secretKey)
+    const key = new TextEncoder().encode(secretKey)
+    if (key.length < 32) throw new Error('SESSION_SECRET must be at least 32 bytes for AES-256-GCM encryption')
+    return key.slice(0, 32)
 }
 
 export async function encrypt(payload: CookiePayload): Promise<string> {
-    return new SignJWT({...payload})
-        .setProtectedHeader({alg: 'HS256'})
+    return new EncryptJWT({...payload})
+        .setProtectedHeader({alg: 'dir', enc: 'A256GCM'})
         .setIssuedAt()
         .setExpirationTime(`${SESSION_DURATION_DAYS}d`)
-        .sign(getEncodedKey())
+        .encrypt(getEncodedKey())
 }
 
 export async function decrypt(session: string | undefined): Promise<CookiePayload | null> {
     if (!session) return null
     try {
-        const {payload} = await jwtVerify(session, getEncodedKey(), {
-            algorithms: ['HS256'],
-        })
+        const {payload} = await jwtDecrypt(session, getEncodedKey())
         return payload as unknown as CookiePayload
     } catch {
         return null

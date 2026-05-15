@@ -18,7 +18,7 @@ public sealed class AddBookFromIsbnHandler(
         Isbn.TryCreate(cmd.RawIsbn, out var isbn);
         var normalizedIsbn = isbn!.Value;
 
-        var existingBook = await db.Books.IgnoreQueryFilters().SingleOrDefaultAsync(b => b.Isbn13 == normalizedIsbn, cancellationToken);
+        var existingBook = await db.Books.IgnoreQueryFilters().FirstOrDefaultAsync(b => b.Isbn13 == normalizedIsbn, cancellationToken);
         
         Book book;
         if (existingBook != null)

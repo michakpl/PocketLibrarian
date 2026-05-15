@@ -55,6 +55,12 @@ resource "azurerm_container_app" "api" {
     identity            = azurerm_user_assigned_identity.api.id
   }
 
+  secret {
+    name                = "app-insights-connection-string"
+    key_vault_secret_id = azurerm_key_vault_secret.app_insights_connection_string.versionless_id
+    identity            = azurerm_user_assigned_identity.api.id
+  }
+
   template {
     min_replicas = 0
     max_replicas = 3
@@ -90,8 +96,8 @@ resource "azurerm_container_app" "api" {
         secret_name = "entraid-audience"
       }
       env {
-        name  = "ApplicationInsights__ConnectionString"
-        value = azurerm_application_insights.main.connection_string
+        name        = "ApplicationInsights__ConnectionString"
+        secret_name = "app-insights-connection-string"
       }
     }
   }
