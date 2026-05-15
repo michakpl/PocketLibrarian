@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Library, X } from 'lucide-react'
+import {BookOpen, Library, MapPin, X} from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { SessionPayload } from '@/lib/session'
@@ -51,6 +51,7 @@ export default function Sidebar({
             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors duration-150
               ${pathname === '/library' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
           >
+            <BookOpen className="w-4 h-4 shrink-0"/>
             Library
           </Link>
           <Link
@@ -58,6 +59,7 @@ export default function Sidebar({
             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors duration-150
               ${pathname === '/library/locations' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
           >
+            <MapPin className="w-4 h-4 shrink-0"/>
             Locations
           </Link>
         </nav>
