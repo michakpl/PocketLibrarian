@@ -125,7 +125,7 @@ describe('LocationPage', () => {
     vi.mocked(getLocations).mockRejectedValue(new UnauthorizedError())
 
     await LocationPage({ searchParams: makeSearchParams() }).catch(() => {})
-    expect(redirect).toHaveBeenCalledWith('/auth/refresh?callbackUrl=/library')
+    expect(redirect).toHaveBeenCalledWith('/auth/refresh?callbackUrl=/library/locations')
   })
 
   it('re-throws non-auth errors', async () => {
