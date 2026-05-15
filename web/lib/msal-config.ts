@@ -23,7 +23,7 @@ export const msalConfig: Configuration = {
   },
 }
 
-const apiScopeBase = process.env.NEXT_PUBLIC_API_SCOPE_BASE ?? `api://${clientId}`
+const apiScopeBase = process.env.NEXT_PUBLIC_API_SCOPE_BASE
 
 export const loginRequest = {
   scopes: [

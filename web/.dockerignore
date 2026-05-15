@@ -1,0 +1,22 @@
+# Dependencies (reinstalled inside image)
+node_modules
+
+# Next.js build output (rebuilt inside image)
+.next
+
+# Tests — not needed in production image
+__tests__/
+e2e/
+test-results/
+playwright.config.ts
+vitest.config.ts
+vitest.setup.ts
+
+# Dev tooling
+Dockerfile.dev
+.env*
+!.env.example
+
+# Docs
+README.md
+

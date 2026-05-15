@@ -44,7 +44,7 @@ dc_resource(
 docker_build(
     'pocketlibrarian-web',
     context='./web',
-    dockerfile='./web/Dockerfile',
+    dockerfile='./web/Dockerfile.dev',
     only=[
         'app/',
         'public/',
