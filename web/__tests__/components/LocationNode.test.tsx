@@ -70,12 +70,10 @@ describe('LocationNode — delete confirmation', () => {
 })
 
 describe('LocationNode — expand toggle', () => {
-  it('expand toggle button is invisible when hasChildren is false', () => {
+  it('expand toggle button is not rendered when hasChildren is false', () => {
     render(<LocationNode location={MOCK_LOCATION} />)
-    // The toggle button has the 'invisible' class when there are no children
     const buttons = screen.getAllByRole('button')
-    const toggleButton = buttons[0]
-    expect(toggleButton).toHaveClass('invisible')
+    expect(buttons).toHaveLength(2)
   })
 })
 
