@@ -20,7 +20,7 @@ export default async function LocationPage(_: Props) {
         locations = await getLocations(session.accessToken)
     } catch (err) {
         if (err instanceof UnauthorizedError) {
-            redirect('/auth/refresh?callbackUrl=/library')
+            redirect('/auth/refresh?callbackUrl=/library/locations')
         }
         throw err
     }

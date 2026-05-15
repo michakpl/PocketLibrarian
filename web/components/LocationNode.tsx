@@ -26,11 +26,8 @@ export default function LocationNode({location}: { location: LocationDto }) {
                     depth > 0 ? "ml-6 border-l-2 border-l-blue-200" : ""
                 }`}
             >
-                {/* Expand toggle */}
-                <button
-                    className={`mt-0.5 text-slate-400 hover:text-slate-600 transition-colors shrink-0 ${
-                        !hasChildren ? "invisible" : ""
-                    }`}
+                {hasChildren && (<button
+                    className="mt-0.5 text-slate-400 hover:text-slate-600 transition-colors shrink-0"
                     onClick={() => setExpanded(!expanded)}
                 >
                     {expanded ? (
@@ -38,7 +35,7 @@ export default function LocationNode({location}: { location: LocationDto }) {
                     ) : (
                         <ChevronRight className="w-4 h-4"/>
                     )}
-                </button>
+                </button>)}
 
                 {/* Icon */}
                 <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
