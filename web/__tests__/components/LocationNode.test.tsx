@@ -36,7 +36,7 @@ describe('LocationNode — rendering', () => {
 
   it('renders Edit button', () => {
     render(<LocationNode location={MOCK_LOCATION} />)
-    expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /edit/i })).toBeInTheDocument()
   })
 
   it('renders Delete button', () => {
@@ -72,8 +72,10 @@ describe('LocationNode — delete confirmation', () => {
 describe('LocationNode — expand toggle', () => {
   it('expand toggle button is not rendered when hasChildren is false', () => {
     render(<LocationNode location={MOCK_LOCATION} />)
-    const buttons = screen.getAllByRole('button')
-    expect(buttons).toHaveLength(2)
+    const links = screen.getAllByRole('link', { name: /edit/i })
+    expect(links).toHaveLength(1)
+    const buttons = screen.getAllByRole('button', { name: /delete/i })
+    expect(buttons).toHaveLength(1)
   })
 })
 
