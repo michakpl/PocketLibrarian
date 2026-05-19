@@ -38,7 +38,7 @@ public sealed class GetBooksHandler(IApplicationDbContext db)
         var books = rawBooks.Select(b => new BookDto(
             b.Id, b.OwnerId, b.Title, b.Author, b.Isbn13, b.Isbn10,
             b.Location,
-            BookDtoFactory.BuildLocationPath(b.LocationId, locationMap))).ToList();
+            LocationDtoFactory.BuildLocationPath(b.LocationId, locationMap))).ToList();
 
         return new PagedResult<BookDto>(books, query.Page, query.PageSize, totalCount);
     }

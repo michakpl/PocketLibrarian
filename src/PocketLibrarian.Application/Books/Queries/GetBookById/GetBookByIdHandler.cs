@@ -19,9 +19,9 @@ public sealed class GetBookByIdHandler(IApplicationDbContext db) : IQueryHandler
 
         var location = await db.Locations.FindAsync([book.LocationId], cancellationToken);
         
-        LocationDto? locationDto = BookDtoFactory.ToLocationDto(location);
+        LocationDto? locationDto = LocationDtoFactory.ToLocationDto(location);
 
-        var locationPath = await BookDtoFactory.BuildLocationPathAsync(db, book.LocationId, book.OwnerId, cancellationToken);
+        var locationPath = await LocationDtoFactory.BuildLocationPathAsync(db, book.LocationId, book.OwnerId, cancellationToken);
 
         return new BookDto(
             book.Id,

@@ -245,6 +245,36 @@
       }
     },
     "/api/locations/{id}": {
+      "get": {
+        "tags": [
+          "LocationsEndpoints"
+        ],
+        "summary": "Get a single location by ID for the current user",
+        "operationId": "GetLocationById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationDto"
+                }
+              }
+            }
+          }
+        }
+      },
       "put": {
         "tags": [
           "LocationsEndpoints"
@@ -418,14 +448,6 @@
         }
       },
       "LocationDto": {
-        "required": [
-          "id",
-          "ownerId",
-          "name",
-          "description",
-          "code",
-          "parentId"
-        ],
         "type": "object",
         "properties": {
           "id": {
@@ -453,10 +475,7 @@
             "format": "uuid"
           },
           "locationPath": {
-            "type": [
-              "null",
-              "array"
-            ],
+            "type": "array",
             "items": {
               "type": "string"
             }

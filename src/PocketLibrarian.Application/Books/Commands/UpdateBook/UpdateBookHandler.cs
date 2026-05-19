@@ -32,9 +32,9 @@ public sealed class UpdateBookHandler(IApplicationDbContext db)
 
         await db.SaveChangesAsync(ct);
 
-        LocationDto? locationDto = BookDtoFactory.ToLocationDto(location);
+        LocationDto? locationDto = LocationDtoFactory.ToLocationDto(location);
 
-        var locationPath = await BookDtoFactory.BuildLocationPathAsync(db, book.LocationId, cmd.OwnerId, ct);
+        var locationPath = await LocationDtoFactory.BuildLocationPathAsync(db, book.LocationId, cmd.OwnerId, ct);
 
         return new BookDto(book.Id, book.OwnerId, book.Title, book.Author, book.Isbn13, book.Isbn10, locationDto,
             locationPath);

@@ -1,11 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using PocketLibrarian.Application.Abstractions;
-using PocketLibrarian.Application.Locations;
 using PocketLibrarian.Domain.Entities;
 
-namespace PocketLibrarian.Application.Books;
+namespace PocketLibrarian.Application.Locations;
 
-public static class BookDtoFactory
+public static class LocationDtoFactory
 {
     public static LocationDto? ToLocationDto(Location? location) =>
         location is null

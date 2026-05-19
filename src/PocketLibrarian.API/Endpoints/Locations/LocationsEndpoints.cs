@@ -4,6 +4,7 @@ using PocketLibrarian.Application.Abstractions;
 using PocketLibrarian.Application.Locations;
 using PocketLibrarian.Application.Locations.Commands.AddLocation;
 using PocketLibrarian.Application.Locations.Commands.UpdateLocation;
+using PocketLibrarian.Application.Locations.Queries.GetLocationById;
 using PocketLibrarian.Application.Locations.Queries.GetLocations;
 
 namespace PocketLibrarian.API.Endpoints.Locations;
@@ -16,6 +17,11 @@ public static class LocationsEndpoints
              .RequireAuthorization("location.read")
              .WithName("GetLocations")
              .WithSummary("Get all locations for the current user");
+
+        group.MapGet("/{id:guid}", GetLocationById)
+             .RequireAuthorization("location.read")
+             .WithName("GetLocationById")
+             .WithSummary("Get a single location by ID for the current user");
 
         group.MapPost("/", AddLocation)
              .RequireAuthorization("location.write")
@@ -35,6 +41,16 @@ public static class LocationsEndpoints
     {
         var locations = await mediator.Send(new GetLocationsQuery(currentUser.OwnerId), cancellationToken);
         return TypedResults.Ok(locations);
+    }
+
+    private static async Task<Ok<LocationDto>> GetLocationById(
+        Guid id,
+        IMediator mediator,
+        CurrentUserContext currentUser,
+        CancellationToken cancellationToken)
+    {
+        var location = await mediator.Send(new GetLocationByIdQuery(id, currentUser.OwnerId), cancellationToken);
+        return TypedResults.Ok(location);
     }
 
     private static async Task<Created<LocationDto>> AddLocation(
