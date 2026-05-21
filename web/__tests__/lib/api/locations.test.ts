@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getLocations } from '@/lib/api/locations'
+import { getLocations, getLocation, createLocation, updateLocation } from '@/lib/api/locations'
+import type { AddLocationRequest, UpdateLocationRequest } from '@/lib/api/locations'
 import { UnauthorizedError } from '@/lib/api/errors'
 
 const MOCK_LOCATIONS = [
@@ -74,3 +75,217 @@ describe('getLocations', () => {
     await expect(getLocations('token')).rejects.toThrow('API_URL')
   })
 })
+
+describe('getLocation', () => {
+  const locationId = 'a0000000-0000-4000-8000-000000000001'
+
+  it('sends GET to /api/locations/{id} with Bearer token', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => MOCK_LOCATIONS[0],
+    })
+
+    await getLocation('my-token', locationId)
+
+    const [url, init] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(url).toBe(`http://api.test/api/locations/${locationId}`)
+    expect((init as RequestInit).headers).toMatchObject({
+      Authorization: 'Bearer my-token',
+    })
+  })
+
+  it('returns the parsed LocationDto on success', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => MOCK_LOCATIONS[0],
+    })
+
+    const result = await getLocation('token', locationId)
+    expect(result).toEqual(MOCK_LOCATIONS[0])
+  })
+
+  it('throws UnauthorizedError on 401', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 401 })
+    await expect(getLocation('bad', locationId)).rejects.toBeInstanceOf(UnauthorizedError)
+  })
+
+  it('throws generic Error on other non-ok status', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      statusText: 'Not Found',
+    })
+    await expect(getLocation('token', locationId)).rejects.toThrow('Failed to fetch location')
+  })
+
+  it('throws if API_URL is not set', async () => {
+    vi.stubEnv('API_URL', '')
+    await expect(getLocation('token', locationId)).rejects.toThrow('API_URL')
+  })
+})
+
+const MOCK_LOCATION = {
+  id: 'a0000000-0000-4000-8000-000000000001',
+  ownerId: 'a0000000-0000-4000-8000-000000000002',
+  name: 'Shelf A',
+  description: 'First shelf',
+  code: 'A',
+  parentId: null,
+  locationPath: ['Shelf A'],
+}
+
+describe('createLocation', () => {
+  const body: AddLocationRequest = {
+    name: 'Shelf A',
+    description: 'First shelf',
+    parentId: null,
+  }
+
+  it('sends POST to /api/locations with correct method, headers and body', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => MOCK_LOCATION,
+    })
+
+    await createLocation('my-token', body)
+
+    const [url, init] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(url).toBe('http://api.test/api/locations')
+    expect((init as RequestInit).method).toBe('POST')
+    expect((init as RequestInit).headers).toMatchObject({
+      Authorization: 'Bearer my-token',
+      'Content-Type': 'application/json',
+    })
+    expect(JSON.parse((init as RequestInit).body as string)).toEqual(body)
+  })
+
+  it('returns the parsed LocationDto on success', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => MOCK_LOCATION,
+    })
+
+    const result = await createLocation('my-token', body)
+    expect(result).toEqual(MOCK_LOCATION)
+  })
+
+  it('throws UnauthorizedError on 401', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 401 })
+    await expect(createLocation('bad', body)).rejects.toBeInstanceOf(UnauthorizedError)
+  })
+
+  it('throws generic Error on other non-ok status', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: 'Internal Server Error',
+    })
+    await expect(createLocation('token', body)).rejects.toThrow('Failed to create location')
+  })
+
+  it('throws if API_URL is not set', async () => {
+    vi.stubEnv('API_URL', '')
+    await expect(createLocation('token', body)).rejects.toThrow('API_URL')
+  })
+
+  it('sends parentId when provided', async () => {
+    const bodyWithParent: AddLocationRequest = {
+      name: 'Sub-shelf',
+      description: 'Nested',
+      parentId: 'a0000000-0000-4000-8000-000000000099',
+    }
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({ ...MOCK_LOCATION, parentId: bodyWithParent.parentId }),
+    })
+
+    const result = await createLocation('token', bodyWithParent)
+
+    const [, init] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(JSON.parse((init as RequestInit).body as string).parentId).toBe(bodyWithParent.parentId)
+    expect(result.parentId).toBe(bodyWithParent.parentId)
+  })
+})
+
+describe('updateLocation', () => {
+  const locationId = 'a0000000-0000-4000-8000-000000000001'
+  const body: UpdateLocationRequest = {
+    name: 'Shelf A Updated',
+    description: 'Updated description',
+    parentId: null,
+  }
+
+  it('sends PUT to /api/locations/{id} with correct method, headers and body', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => MOCK_LOCATION,
+    })
+
+    await updateLocation('my-token', locationId, body)
+
+    const [url, init] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(url).toBe(`http://api.test/api/locations/${locationId}`)
+    expect((init as RequestInit).method).toBe('PUT')
+    expect((init as RequestInit).headers).toMatchObject({
+      Authorization: 'Bearer my-token',
+      'Content-Type': 'application/json',
+    })
+    expect(JSON.parse((init as RequestInit).body as string)).toEqual(body)
+  })
+
+  it('returns the parsed LocationDto on success', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => MOCK_LOCATION,
+    })
+
+    const result = await updateLocation('my-token', locationId, body)
+    expect(result).toEqual(MOCK_LOCATION)
+  })
+
+  it('throws UnauthorizedError on 401', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 401 })
+    await expect(updateLocation('bad', locationId, body)).rejects.toBeInstanceOf(UnauthorizedError)
+  })
+
+  it('throws generic Error on other non-ok status', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      statusText: 'Not Found',
+    })
+    await expect(updateLocation('token', locationId, body)).rejects.toThrow('Failed to update location')
+  })
+
+  it('throws if API_URL is not set', async () => {
+    vi.stubEnv('API_URL', '')
+    await expect(updateLocation('token', locationId, body)).rejects.toThrow('API_URL')
+  })
+
+  it('sends parentId when provided', async () => {
+    const bodyWithParent: UpdateLocationRequest = {
+      name: 'Sub-shelf',
+      description: 'Nested',
+      parentId: 'a0000000-0000-4000-8000-000000000099',
+    }
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ ...MOCK_LOCATION, parentId: bodyWithParent.parentId }),
+    })
+
+    const result = await updateLocation('token', locationId, bodyWithParent)
+
+    const [, init] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(JSON.parse((init as RequestInit).body as string).parentId).toBe(bodyWithParent.parentId)
+    expect(result.parentId).toBe(bodyWithParent.parentId)
+  })
+})
+

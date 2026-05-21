@@ -3,14 +3,11 @@
 import {Barcode, ChevronDown, ChevronRight, MapPin, Pencil, Trash2} from "lucide-react";
 import {LocationDto} from "@/lib/types/location";
 import {useState} from "react";
+import Link from "next/link";
 
 export default function LocationNode({location}: { location: LocationDto }) {
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
     const [expanded, setExpanded] = useState(false);
-
-    function onEdit(id: string) {
-        console.log('Edit location', id)
-    }
 
     const hasChildren = false;
     const depth = 0;
@@ -66,13 +63,13 @@ export default function LocationNode({location}: { location: LocationDto }) {
                     </div>
 
                     <div className="flex items-center gap-2 mt-3 pt-2 border-t border-slate-100">
-                        <button
-                            onClick={() => onEdit(location.id)}
+                        <Link
+                            href={`/library/locations/${location.id}/edit`}
                             className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-blue-600 transition-colors px-2 py-1 rounded hover:bg-blue-50"
                         >
                             <Pencil className="w-3.5 h-3.5"/>
                             Edit
-                        </button>
+                        </Link>
                         {deleteConfirm === location.id ? (
                             <div className="flex items-center gap-2 ml-auto">
                                 <span
