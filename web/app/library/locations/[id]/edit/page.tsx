@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { ArrowLeft, MapPin } from 'lucide-react'
 import { getLocation, getLocations } from '@/lib/api/locations'
 import { getSession } from '@/lib/session'
-import { redirect, notFound } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import { UnauthorizedError } from '@/lib/api/errors'
 import LocationForm from '@/components/LocationForm'
 
@@ -23,8 +23,6 @@ export default async function EditLocation({ params }: { params: Promise<{ id: s
     }
     throw err
   }
-
-  if (!location) notFound()
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
