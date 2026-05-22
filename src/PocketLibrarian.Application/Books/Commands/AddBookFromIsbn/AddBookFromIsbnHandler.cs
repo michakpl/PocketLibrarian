@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using PocketLibrarian.Application.Abstractions;
 using PocketLibrarian.Application.Exceptions;
 using PocketLibrarian.Application.IsbnLookup;
+using PocketLibrarian.Application.Locations;
 using PocketLibrarian.Domain.Entities;
 using PocketLibrarian.Domain.ValueObjects;
 
@@ -18,12 +19,24 @@ public sealed class AddBookFromIsbnHandler(
         Isbn.TryCreate(cmd.RawIsbn, out var isbn);
         var normalizedIsbn = isbn!.Value;
 
-        var existingBook = await db.Books.IgnoreQueryFilters().FirstOrDefaultAsync(b => b.Isbn13 == normalizedIsbn, cancellationToken);
-        
+        var existingBook = await db.Books.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(b => b.Isbn13 == normalizedIsbn, cancellationToken);
+
+        Location? location = null;
+        if (cmd.LocationId.HasValue)
+        {
+            location = await db.Locations
+                .SingleOrDefaultAsync(l => l.Id == cmd.LocationId.Value && l.OwnerId == cmd.OwnerId, cancellationToken);
+
+            if (location is null)
+                throw new NotFoundException(nameof(Location), cmd.LocationId.Value);
+        }
+
         Book book;
         if (existingBook != null)
         {
-            book = Book.Create(existingBook.Title, existingBook.Author, cmd.OwnerId, normalizedIsbn, existingBook.Isbn10);
+            book = Book.Create(existingBook.Title, existingBook.Author, cmd.OwnerId, normalizedIsbn,
+                existingBook.Isbn10, location?.Id);
         }
         else
         {
@@ -31,18 +44,19 @@ public sealed class AddBookFromIsbnHandler(
 
             if (metadata is null)
                 throw new NotFoundException("Book", normalizedIsbn);
-            
+
             var author = metadata.Authors.Count > 0
                 ? string.Join(", ", metadata.Authors)
                 : "Unknown";
 
-            book = Book.Create(metadata.Title, author, cmd.OwnerId, metadata.Isbn13, metadata.Isbn10);
+            book = Book.Create(metadata.Title, author, cmd.OwnerId, metadata.Isbn13, metadata.Isbn10, location?.Id);
         }
 
         db.Books.Add(book);
         await db.SaveChangesAsync(cancellationToken);
+        
+        var locationPath = await LocationDtoFactory.BuildLocationPathAsync(db, cmd.LocationId, cmd.OwnerId, cancellationToken);
 
-        return new BookDto(book.Id, book.OwnerId, book.Title, book.Author, book.Isbn13, book.Isbn10, null, []);
+        return new BookDto(book.Id, book.OwnerId, book.Title, book.Author, book.Isbn13, book.Isbn10, LocationDtoFactory.ToLocationDto(location), locationPath);
     }
 }
-

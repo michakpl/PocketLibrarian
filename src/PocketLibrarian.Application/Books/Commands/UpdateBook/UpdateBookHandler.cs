@@ -10,10 +10,10 @@ namespace PocketLibrarian.Application.Books.Commands.UpdateBook;
 public sealed class UpdateBookHandler(IApplicationDbContext db)
     : ICommandHandler<UpdateBookCommand, BookDto>
 {
-    public async ValueTask<BookDto> Handle(UpdateBookCommand cmd, CancellationToken ct)
+    public async ValueTask<BookDto> Handle(UpdateBookCommand cmd, CancellationToken cancellationToken)
     {
         var book = await db.Books
-            .FirstOrDefaultAsync(b => b.Id == cmd.BookId && b.OwnerId == cmd.OwnerId, ct);
+            .FirstOrDefaultAsync(b => b.Id == cmd.BookId && b.OwnerId == cmd.OwnerId, cancellationToken);
 
         if (book is null)
             throw new NotFoundException(nameof(Book), cmd.BookId);
@@ -22,7 +22,7 @@ public sealed class UpdateBookHandler(IApplicationDbContext db)
         if (cmd.LocationId.HasValue)
         {
             location = await db.Locations
-                .FirstOrDefaultAsync(l => l.Id == cmd.LocationId.Value && l.OwnerId == cmd.OwnerId, ct);
+                .FirstOrDefaultAsync(l => l.Id == cmd.LocationId.Value && l.OwnerId == cmd.OwnerId, cancellationToken);
 
             if (location is null)
                 throw new NotFoundException(nameof(Location), cmd.LocationId.Value);
@@ -30,11 +30,11 @@ public sealed class UpdateBookHandler(IApplicationDbContext db)
 
         book.Update(cmd.Title, cmd.Author, cmd.Isbn13, cmd.Isbn10, cmd.LocationId);
 
-        await db.SaveChangesAsync(ct);
+        await db.SaveChangesAsync(cancellationToken);
 
         LocationDto? locationDto = LocationDtoFactory.ToLocationDto(location);
 
-        var locationPath = await LocationDtoFactory.BuildLocationPathAsync(db, book.LocationId, cmd.OwnerId, ct);
+        var locationPath = await LocationDtoFactory.BuildLocationPathAsync(db, book.LocationId, cmd.OwnerId, cancellationToken);
 
         return new BookDto(book.Id, book.OwnerId, book.Title, book.Author, book.Isbn13, book.Isbn10, locationDto,
             locationPath);

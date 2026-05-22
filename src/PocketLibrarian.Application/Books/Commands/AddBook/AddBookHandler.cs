@@ -10,13 +10,13 @@ namespace PocketLibrarian.Application.Books.Commands.AddBook;
 public sealed class AddBookHandler(IApplicationDbContext db)
     : ICommandHandler<AddBookCommand, BookDto>
 {
-    public async ValueTask<BookDto> Handle(AddBookCommand cmd, CancellationToken ct)
+    public async ValueTask<BookDto> Handle(AddBookCommand cmd, CancellationToken cancellationToken)
     {
         Location? location = null;
         if (cmd.LocationId.HasValue)
         {
             location = await db.Locations
-                .SingleOrDefaultAsync(l => l.Id == cmd.LocationId.Value && l.OwnerId == cmd.OwnerId, ct);
+                .SingleOrDefaultAsync(l => l.Id == cmd.LocationId.Value && l.OwnerId == cmd.OwnerId, cancellationToken);
 
             if (location is null)
                 throw new NotFoundException(nameof(Location), cmd.LocationId.Value);
@@ -25,9 +25,9 @@ public sealed class AddBookHandler(IApplicationDbContext db)
         var book = Book.Create(cmd.Title, cmd.Author, cmd.OwnerId, cmd.Isbn13, cmd.Isbn10, cmd.LocationId);
 
         db.Books.Add(book);
-        await db.SaveChangesAsync(ct);
+        await db.SaveChangesAsync(cancellationToken);
 
-        var locationPath = await LocationDtoFactory.BuildLocationPathAsync(db, cmd.LocationId, cmd.OwnerId, ct);
+        var locationPath = await LocationDtoFactory.BuildLocationPathAsync(db, cmd.LocationId, cmd.OwnerId, cancellationToken);
 
         return new BookDto(book.Id, book.OwnerId, book.Title, book.Author, book.Isbn13, book.Isbn10,
             LocationDtoFactory.ToLocationDto(location),

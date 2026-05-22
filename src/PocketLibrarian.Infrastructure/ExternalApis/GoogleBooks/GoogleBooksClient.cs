@@ -9,13 +9,13 @@ namespace PocketLibrarian.Infrastructure.ExternalApis.GoogleBooks;
 public sealed class GoogleBooksClient(HttpClient http, IOptions<GoogleBooksOptions> options)
     : IBookMetadataProvider
 {
-    public async Task<BookMetadata?> LookupAsync(Isbn isbn, CancellationToken ct = default)
+    public async Task<BookMetadata?> LookupAsync(Isbn isbn, CancellationToken cancellationToken = default)
     {
         var encodedIsbn = Uri.EscapeDataString(isbn.Value);
         var encodedApiKey = Uri.EscapeDataString(options.Value.ApiKey);
         var url = $"volumes?q=isbn:{encodedIsbn}&key={encodedApiKey}&maxResults=1";
 
-        var response = await http.GetFromJsonAsync<GoogleBooksSearchResponse>(url, ct);
+        var response = await http.GetFromJsonAsync<GoogleBooksSearchResponse>(url, cancellationToken);
 
         if (response is null || response.TotalItems == 0 || response.Items is not { Count: > 0 })
             return null;

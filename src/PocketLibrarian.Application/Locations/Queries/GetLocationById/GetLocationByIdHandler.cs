@@ -9,17 +9,17 @@ namespace PocketLibrarian.Application.Locations.Queries.GetLocationById;
 public sealed class GetLocationByIdHandler(IApplicationDbContext db)
     : IQueryHandler<GetLocationByIdQuery, LocationDto>
 {
-    public async ValueTask<LocationDto> Handle(GetLocationByIdQuery query, CancellationToken ct)
+    public async ValueTask<LocationDto> Handle(GetLocationByIdQuery query, CancellationToken cancellationToken)
     {
         var location = await db.Locations
-            .SingleOrDefaultAsync(l => l.Id == query.Id && l.OwnerId == query.OwnerId, ct);
+            .SingleOrDefaultAsync(l => l.Id == query.Id && l.OwnerId == query.OwnerId, cancellationToken);
 
         if (location is null)
         {
             throw new NotFoundException(nameof(Location), query.Id);
         }
 
-        var locationPath = await LocationDtoFactory.BuildLocationPathAsync(db, location.Id, location.OwnerId, ct);
+        var locationPath = await LocationDtoFactory.BuildLocationPathAsync(db, location.Id, location.OwnerId, cancellationToken);
 
         return new LocationDto(
             location.Id,

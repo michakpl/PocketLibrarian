@@ -7,12 +7,12 @@ namespace PocketLibrarian.Application.Locations.Queries.GetLocations;
 public sealed class GetLocationsHandler(IApplicationDbContext db)
     : IQueryHandler<GetLocationsQuery, IReadOnlyList<LocationDto>>
 {
-    public async ValueTask<IReadOnlyList<LocationDto>> Handle(GetLocationsQuery query, CancellationToken ct)
+    public async ValueTask<IReadOnlyList<LocationDto>> Handle(GetLocationsQuery query, CancellationToken cancellationToken)
     {
         var raw = await db.Locations
             .Where(l => l.OwnerId == query.OwnerId)
             .Select(l => new { l.Id, l.OwnerId, l.Name, l.Description, l.Code, l.ParentId })
-            .ToListAsync(ct);
+            .ToListAsync(cancellationToken);
 
         var locationMap = raw.ToDictionary(
             l => l.Id,

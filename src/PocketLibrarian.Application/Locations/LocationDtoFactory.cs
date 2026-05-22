@@ -31,14 +31,14 @@ public static class LocationDtoFactory
     }
 
     public static async ValueTask<IReadOnlyList<string>> BuildLocationPathAsync(
-        IApplicationDbContext db, Guid? locationId, Guid ownerId, CancellationToken ct)
+        IApplicationDbContext db, Guid? locationId, Guid ownerId, CancellationToken cancellationToken)
     {
         if (locationId is null) return [];
 
         var locationMap = (await db.Locations
                 .Where(l => l.OwnerId == ownerId)
                 .Select(l => new { l.Id, l.Name, l.ParentId })
-                .ToListAsync(ct))
+                .ToListAsync(cancellationToken))
             .ToDictionary(l => l.Id, l => (l.Name, l.ParentId));
 
         return BuildLocationPath(locationId, locationMap);

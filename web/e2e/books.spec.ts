@@ -153,45 +153,73 @@ test.describe('add book form', () => {
     expect(new URL(page.url()).pathname).toBe('/library/books/add')
   })
 
-  test('add book page renders the form fields', async ({ page }) => {
+  test('add book page renders the manual form fields', async ({ page }) => {
     await registerLocations([LOCATION_1])
     await page.goto('/library/books/add')
     await expect(page.getByPlaceholder(/book title/i)).toBeVisible()
     await expect(page.getByPlaceholder(/author name/i)).toBeVisible()
-    await expect(page.getByPlaceholder(/e.g. 978/i)).toBeVisible()
-    await expect(page.getByPlaceholder(/e.g. 0-000/i)).toBeVisible()
-    await expect(page.getByRole('combobox')).toBeVisible()
+    await expect(page.getByPlaceholder(/e.g. 978-0-000-00000-0/i).last()).toBeVisible()
+    await expect(page.getByPlaceholder(/e.g. 0-000-00000-0/i)).toBeVisible()
   })
 
-  test('add book page shows location options', async ({ page }) => {
+  test('add book page renders the ISBN lookup form', async ({ page }) => {
     await registerLocations([LOCATION_1])
     await page.goto('/library/books/add')
-    await expect(page.getByRole('combobox')).toContainText('Shelf A')
+    await expect(page.getByPlaceholder(/978-0-000-00000-0 or 0-000-00000-0/i)).toBeVisible()
+    await expect(page.getByRole('button', { name: /scan barcode/i })).toBeVisible()
   })
 
-  test('shows validation error when submitting empty title', async ({ page }) => {
+  test('add book page shows location options in both forms', async ({ page }) => {
+    await registerLocations([LOCATION_1])
+    await page.goto('/library/books/add')
+    const combos = page.getByRole('combobox')
+    await expect(combos.first()).toContainText('Shelf A')
+    await expect(combos.last()).toContainText('Shelf A')
+  })
+
+  test('shows validation error when submitting empty ISBN in ISBN form', async ({ page }) => {
     await registerLocations([])
     await page.goto('/library/books/add')
-    await page.getByRole('button', { name: /add book/i }).click()
+    // Click the first "Add Book" button — belongs to the ISBN lookup form
+    await page.getByRole('button', { name: /add book/i }).first().click()
+    await expect(page.getByText(/isbn is required/i)).toBeVisible()
+  })
+
+  test('shows validation error when submitting empty title in manual form', async ({ page }) => {
+    await registerLocations([])
+    await page.goto('/library/books/add')
+    // Click the second "Add Book" button — belongs to the manual BookForm
+    await page.getByRole('button', { name: /add book/i }).last().click()
     await expect(page.getByText(/title is required/i)).toBeVisible()
   })
 
-  test('shows validation error when submitting empty author', async ({ page }) => {
+  test('shows validation error when submitting empty author in manual form', async ({ page }) => {
     await registerLocations([])
     await page.goto('/library/books/add')
     await page.getByPlaceholder(/book title/i).fill('My Book')
-    await page.getByRole('button', { name: /add book/i }).click()
+    await page.getByRole('button', { name: /add book/i }).last().click()
     await expect(page.getByText(/author is required/i)).toBeVisible()
   })
 
-  test('submits form and redirects to /library on success', async ({ page }) => {
+  test('submits manual form and redirects to /library on success', async ({ page }) => {
     await registerLocations([LOCATION_1])
     await registerHandler({ method: 'POST', path: '/api/books', status: 201, body: BOOK_1 })
     await registerBooks({ items: [BOOK_1], totalCount: 1, totalPages: 1 })
     await page.goto('/library/books/add')
     await page.getByPlaceholder(/book title/i).fill('Clean Code')
     await page.getByPlaceholder(/author name/i).fill('Robert C. Martin')
-    await page.getByRole('button', { name: /add book/i }).click()
+    await page.getByRole('button', { name: /add book/i }).last().click()
+    await page.waitForURL('**/library')
+    expect(new URL(page.url()).pathname).toBe('/library')
+  })
+
+  test('submits ISBN form and redirects to /library on success', async ({ page }) => {
+    await registerLocations([LOCATION_1])
+    await registerHandler({ method: 'POST', path: '/api/books/isbn', status: 201, body: BOOK_1 })
+    await registerBooks({ items: [BOOK_1], totalCount: 1, totalPages: 1 })
+    await page.goto('/library/books/add')
+    await page.getByPlaceholder(/978-0-000-00000-0 or 0-000-00000-0/i).fill('9780135957059')
+    await page.getByRole('button', { name: /add book/i }).first().click()
     await page.waitForURL('**/library')
     expect(new URL(page.url()).pathname).toBe('/library')
   })

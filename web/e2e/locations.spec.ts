@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test'
 import { injectSession, clearSession, DEFAULT_USER } from './helpers/session'
 import { registerHandler, resetHandlers } from './helpers/mock-client'
 import { randomUUID } from 'crypto'
+import {LocationDto} from "@/lib/types/location";
 
 test.afterEach(async () => {
   await resetHandlers()
@@ -41,7 +42,7 @@ const LOCATION_CHILD = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-async function registerLocations(locations: object[] = []) {
+async function registerLocations(locations: LocationDto[] = []) {
   await registerHandler({ method: 'GET', path: '/api/locations', body: locations })
 }
 
@@ -283,7 +284,7 @@ test.describe('edit location form', () => {
     await injectSession(context)
   })
 
-  async function registerLocation(location: typeof LOCATION_1) {
+  async function registerLocation(location: LocationDto) {
     await registerHandler({
       method: 'GET',
       path: `/api/locations/${location.id}`,

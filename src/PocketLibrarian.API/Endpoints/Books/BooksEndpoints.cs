@@ -93,7 +93,7 @@ public static class BooksEndpoints
         CurrentUserContext currentUser,
         CancellationToken cancellationToken)
     {
-        var command = new AddBookFromIsbnCommand(currentUser.OwnerId, request.Isbn);
+        var command = new AddBookFromIsbnCommand(currentUser.OwnerId, request.Isbn, request.LocationId);
         var book = await mediator.Send(command, cancellationToken);
         return TypedResults.Created($"/api/books/{book.Id}", book);
     }
@@ -103,5 +103,5 @@ internal sealed record AddBookRequest(string Title, string Author, string? Isbn1
 
 internal sealed record UpdateBookRequest(string Title, string Author, string? Isbn13, string? Isbn10, Guid? LocationId);
 
-internal sealed record AddBookFromIsbnRequest(string Isbn);
+internal sealed record AddBookFromIsbnRequest(string Isbn, Guid? LocationId);
 
