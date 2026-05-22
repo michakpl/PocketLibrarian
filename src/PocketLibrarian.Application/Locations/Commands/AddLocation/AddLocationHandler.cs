@@ -9,12 +9,12 @@ namespace PocketLibrarian.Application.Locations.Commands.AddLocation;
 public sealed class AddLocationHandler(IApplicationDbContext db)
     : ICommandHandler<AddLocationCommand, LocationDto>
 {
-    public async ValueTask<LocationDto> Handle(AddLocationCommand cmd, CancellationToken ct)
+    public async ValueTask<LocationDto> Handle(AddLocationCommand cmd, CancellationToken cancellationToken)
     {
         if (cmd.ParentId.HasValue)
         {
             var parentExists = await db.Locations
-                .AnyAsync(l => l.Id == cmd.ParentId.Value && l.OwnerId == cmd.OwnerId, ct);
+                .AnyAsync(l => l.Id == cmd.ParentId.Value && l.OwnerId == cmd.OwnerId, cancellationToken);
 
             if (!parentExists)
                 throw new NotFoundException(nameof(Location), cmd.ParentId.Value);
@@ -24,7 +24,7 @@ public sealed class AddLocationHandler(IApplicationDbContext db)
         var location = Location.Create(cmd.Name, cmd.Description, code, cmd.OwnerId, cmd.ParentId);
 
         db.Locations.Add(location);
-        await db.SaveChangesAsync(ct);
+        await db.SaveChangesAsync(cancellationToken);
 
         return new LocationDto(location.Id, location.OwnerId, location.Name, location.Description, location.Code, location.ParentId);
     }
