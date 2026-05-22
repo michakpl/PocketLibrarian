@@ -56,7 +56,7 @@ public sealed class AddBookFromIsbnHandlerTests : IDisposable
         _provider.LookupAsync(Arg.Any<Isbn>(), Arg.Any<CancellationToken>())
                  .Returns(metadata);
 
-        var result = await _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13), CancellationToken.None);
+        var result = await _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13, null), CancellationToken.None);
 
         Assert.NotEqual(Guid.Empty, result.Id);
         Assert.Equal(_ownerId, result.OwnerId);
@@ -74,7 +74,7 @@ public sealed class AddBookFromIsbnHandlerTests : IDisposable
         _provider.LookupAsync(Arg.Any<Isbn>(), Arg.Any<CancellationToken>())
                  .Returns(metadata);
 
-        var result = await _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13), CancellationToken.None);
+        var result = await _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13, null), CancellationToken.None);
 
         _db.ChangeTracker.Clear();
         var saved = await _db.Books.IgnoreQueryFilters().SingleAsync(b => b.Id == result.Id);
@@ -89,7 +89,7 @@ public sealed class AddBookFromIsbnHandlerTests : IDisposable
                  .Returns((BookMetadata?)null);
 
         await Assert.ThrowsAsync<NotFoundException>(() =>
-            _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13), CancellationToken.None).AsTask());
+            _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13, null), CancellationToken.None).AsTask());
     }
 
     // ── Existing DB record path ────────────────────────────────────────────────
@@ -102,7 +102,7 @@ public sealed class AddBookFromIsbnHandlerTests : IDisposable
         await _db.SaveChangesAsync();
         _db.ChangeTracker.Clear();
 
-        await _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13), CancellationToken.None);
+        await _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13, null), CancellationToken.None);
 
         await _provider.DidNotReceive().LookupAsync(Arg.Any<Isbn>(), Arg.Any<CancellationToken>());
     }
@@ -115,7 +115,7 @@ public sealed class AddBookFromIsbnHandlerTests : IDisposable
         await _db.SaveChangesAsync();
         _db.ChangeTracker.Clear();
 
-        var result = await _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13), CancellationToken.None);
+        var result = await _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13, null), CancellationToken.None);
 
         Assert.Equal("Dune", result.Title);
         Assert.Equal("Frank Herbert", result.Author);
@@ -130,7 +130,7 @@ public sealed class AddBookFromIsbnHandlerTests : IDisposable
         await _db.SaveChangesAsync();
         _db.ChangeTracker.Clear();
 
-        var result = await _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13), CancellationToken.None);
+        var result = await _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13, null), CancellationToken.None);
 
         _db.ChangeTracker.Clear();
         var saved = await _db.Books.IgnoreQueryFilters().SingleAsync(b => b.Id == result.Id);
@@ -150,7 +150,7 @@ public sealed class AddBookFromIsbnHandlerTests : IDisposable
         _provider.LookupAsync(Arg.Any<Isbn>(), Arg.Any<CancellationToken>())
                  .Returns(metadata);
 
-        var result = await _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13), CancellationToken.None);
+        var result = await _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13, null), CancellationToken.None);
 
         Assert.Equal("Terry Pratchett, Neil Gaiman", result.Author);
     }
@@ -163,8 +163,73 @@ public sealed class AddBookFromIsbnHandlerTests : IDisposable
         _provider.LookupAsync(Arg.Any<Isbn>(), Arg.Any<CancellationToken>())
                  .Returns(metadata);
 
-        var result = await _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13), CancellationToken.None);
+        var result = await _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13, null), CancellationToken.None);
 
         Assert.Equal("Unknown", result.Author);
+    }
+
+    // ── LocationId path ────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task Handle_WithValidLocationId_NoExistingBook_PersistsBookWithLocationId()
+    {
+        var location = Location.Create("Shelf A", "Top shelf", "SHELF-A", _ownerId);
+        _db.Locations.Add(location);
+        await _db.SaveChangesAsync();
+
+        var metadata = new BookMetadata("Dune", null, ["Frank Herbert"], null, null, null, null, null, null, ValidIsbn13, null);
+        _provider.LookupAsync(Arg.Any<Isbn>(), Arg.Any<CancellationToken>())
+                 .Returns(metadata);
+
+        var result = await _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13, location.Id), CancellationToken.None);
+
+        _db.ChangeTracker.Clear();
+        var saved = await _db.Books.IgnoreQueryFilters().SingleAsync(b => b.Id == result.Id);
+        Assert.Equal(location.Id, saved.LocationId);
+    }
+
+    [Fact]
+    public async Task Handle_WithValidLocationId_ExistingBookInDb_PersistsBookWithLocationId()
+    {
+        var location = Location.Create("Shelf B", "Bottom shelf", "SHELF-B", _ownerId);
+        _db.Locations.Add(location);
+
+        var existingBook = Book.Create("Dune", "Frank Herbert", Guid.NewGuid(), ValidIsbn13);
+        _db.Books.Add(existingBook);
+        await _db.SaveChangesAsync();
+        _db.ChangeTracker.Clear();
+
+        var result = await _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13, location.Id), CancellationToken.None);
+
+        _db.ChangeTracker.Clear();
+        var saved = await _db.Books.IgnoreQueryFilters().SingleAsync(b => b.Id == result.Id);
+        Assert.Equal(location.Id, saved.LocationId);
+    }
+
+    [Fact]
+    public async Task Handle_WithNonExistentLocationId_ThrowsNotFoundException()
+    {
+        var metadata = new BookMetadata("Dune", null, ["Frank Herbert"], null, null, null, null, null, null, ValidIsbn13, null);
+        _provider.LookupAsync(Arg.Any<Isbn>(), Arg.Any<CancellationToken>())
+                 .Returns(metadata);
+
+        await Assert.ThrowsAsync<NotFoundException>(() =>
+            _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13, Guid.NewGuid()), CancellationToken.None).AsTask());
+    }
+
+    [Fact]
+    public async Task Handle_WithLocationIdBelongingToDifferentOwner_ThrowsNotFoundException()
+    {
+        var differentOwnerId = Guid.NewGuid();
+        var location = Location.Create("Shelf C", "Other owner's shelf", "SHELF-C", differentOwnerId);
+        _db.Locations.Add(location);
+        await _db.SaveChangesAsync();
+
+        var metadata = new BookMetadata("Dune", null, ["Frank Herbert"], null, null, null, null, null, null, ValidIsbn13, null);
+        _provider.LookupAsync(Arg.Any<Isbn>(), Arg.Any<CancellationToken>())
+                 .Returns(metadata);
+
+        await Assert.ThrowsAsync<NotFoundException>(() =>
+            _handler.Handle(new AddBookFromIsbnCommand(_ownerId, ValidIsbn13, location.Id), CancellationToken.None).AsTask());
     }
 }

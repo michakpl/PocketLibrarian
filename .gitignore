@@ -33,9 +33,6 @@ artifacts/
 *.snupkg
 **/[Pp]ackages/*
 
-# NuGet package restore lockfiles
-packages.lock.json
-
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 

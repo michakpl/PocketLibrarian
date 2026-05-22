@@ -5,6 +5,7 @@ import { getSession } from '@/lib/session'
 import BookForm from '@/components/BookForm'
 import {redirect} from "next/navigation";
 import {UnauthorizedError} from "@/lib/api/errors";
+import BookFromISBNForm from "@/components/BookFromISBNForm";
 
 export default async function AddBook() {
   const session = await getSession()
@@ -35,6 +36,14 @@ export default async function AddBook() {
           </div>
           <h1 className="text-slate-900 text-xl">Add Book</h1>
         </div>
+      </div>
+      
+      <BookFromISBNForm locations={locations} />
+
+      <div className="my-8 flex items-center gap-3">
+        <hr className="grow border-slate-200" />
+        <span className="text-sm text-slate-500">or</span>
+        <hr className="grow border-slate-200" />
       </div>
 
       <BookForm locations={locations} />
