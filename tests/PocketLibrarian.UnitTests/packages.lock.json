@@ -431,8 +431,8 @@
       },
       "Microsoft.OpenApi": {
         "type": "Transitive",
-        "resolved": "2.0.0",
-        "contentHash": "GGYLfzV/G/ct80OZ45JxnWP7NvMX1BCugn/lX7TH5o0lcVaviavsLMTxmFV2AybXWjbi3h6FF1vgZiTK6PXndw=="
+        "resolved": "2.7.6",
+        "contentHash": "suM/dwWsQC8DEOcTeLQvKpXP0c2j/hllKD++IqCavZENr8Df1IgVDMCJRMZd2pGI1NSxMDWrhuPQXG+ZMRrSZA=="
       },
       "Microsoft.SqlServer.Server": {
         "type": "Transitive",
@@ -565,6 +565,7 @@
           "FluentValidation.DependencyInjectionExtensions": "[11.11.0, )",
           "Mediator.Abstractions": "[3.0.2, )",
           "Microsoft.AspNetCore.OpenApi": "[10.0.5, )",
+          "Microsoft.OpenApi": "[2.7.6, )",
           "PocketLibrarian.Application": "[1.0.0, )",
           "PocketLibrarian.Infrastructure": "[1.0.0, )"
         }

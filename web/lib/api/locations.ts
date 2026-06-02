@@ -1,6 +1,6 @@
 import 'server-only'
-import type { LocationDto } from '@/lib/types/location'
-import { LocationDtoSchema } from '@/lib/types/schemas'
+import type { LocationBarcodeDto, LocationDto } from '@/lib/types/location'
+import { LocationBarcodeDtoSchema, LocationDtoSchema } from '@/lib/types/schemas'
 import { z } from 'zod'
 import { UnauthorizedError } from './errors'
 
@@ -86,6 +86,36 @@ export async function createLocation(
 
   const data = await response.json()
   return LocationDtoSchema.parse(data)
+}
+
+export async function getLocationBarcodes(
+  accessToken: string,
+  ids: string[]
+): Promise<LocationBarcodeDto[]> {
+  const apiUrl = process.env.API_URL
+  if (!apiUrl) throw new Error('API_URL environment variable is not set')
+
+  const url = new URL(`${apiUrl}/api/locations/barcodes`)
+
+  const response = await fetch(url.toString(), {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ ids }),
+  })
+
+  if (response.status === 401) {
+    throw new UnauthorizedError()
+  }
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch location barcodes: ${response.status} ${response.statusText}`)
+  }
+
+  const data = await response.json()
+  return z.array(LocationBarcodeDtoSchema).parse(data)
 }
 
 export interface UpdateLocationRequest {

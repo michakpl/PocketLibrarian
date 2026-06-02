@@ -141,5 +141,14 @@ describe('LocationPage', () => {
     await LocationPage({ searchParams: makeSearchParams() })
     expect(getLocations).toHaveBeenCalledWith('token')
   })
+
+  it('renders Print Barcodes button via LocationsList', async () => {
+    vi.mocked(getLocations).mockResolvedValue([MOCK_LOCATION])
+
+    const page = await LocationPage({ searchParams: makeSearchParams() })
+    render(page)
+
+    expect(screen.getByRole('button', { name: /print barcodes/i })).toBeInTheDocument()
+  })
 })
 

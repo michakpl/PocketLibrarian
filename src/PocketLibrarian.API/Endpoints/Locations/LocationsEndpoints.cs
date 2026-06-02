@@ -4,6 +4,7 @@ using PocketLibrarian.Application.Abstractions;
 using PocketLibrarian.Application.Locations;
 using PocketLibrarian.Application.Locations.Commands.AddLocation;
 using PocketLibrarian.Application.Locations.Commands.UpdateLocation;
+using PocketLibrarian.Application.Locations.Queries.GetLocationBarcodes;
 using PocketLibrarian.Application.Locations.Queries.GetLocationById;
 using PocketLibrarian.Application.Locations.Queries.GetLocations;
 
@@ -32,6 +33,11 @@ public static class LocationsEndpoints
             .RequireAuthorization("location.write")
             .WithName("UpdateLocation")
             .WithSummary("Update an existing location by ID for the current user");
+
+        group.MapPost("/barcodes", GetLocationBarcodes)
+            .RequireAuthorization("location.read")
+            .WithName("GetLocationBarcodes")
+            .WithSummary("Get location barcodes (name, path, code) for printing; optionally filtered by location IDs");
 
         return group;
     }
@@ -75,11 +81,21 @@ public static class LocationsEndpoints
         var location = await mediator.Send(command, cancellationToken);
         return TypedResults.Ok(location);
     }
+
+    private static async Task<Ok<IReadOnlyList<LocationBarcodeDto>>> GetLocationBarcodes(
+        GetLocationBarcodesRequest request,
+        IMediator mediator,
+        CurrentUserContext currentUser,
+        CancellationToken cancellationToken)
+    {
+        var query = new GetLocationBarcodesQuery(currentUser.OwnerId, request.Ids);
+        var barcodes = await mediator.Send(query, cancellationToken);
+        return TypedResults.Ok(barcodes);
+    }
 }
 
 internal sealed record AddLocationRequest(string Name, string Description, Guid? ParentId);
 
 internal sealed record UpdateLocationRequest(string Name, string Description, Guid? ParentId);
 
-
-
+internal sealed record GetLocationBarcodesRequest(Guid[]? Ids);
