@@ -11,17 +11,21 @@ public sealed class GetLocationBarcodesHandler(IApplicationDbContext db)
         GetLocationBarcodesQuery query,
         CancellationToken cancellationToken)
     {
-        var locationsQuery = db.Locations.Where(l => l.OwnerId == query.OwnerId);
+        var ownerLocationsQuery = db.Locations.Where(l => l.OwnerId == query.OwnerId);
+        
+        var locationMap = (await ownerLocationsQuery
+            .Select(l => new {l.Id, l.Name, l.ParentId})
+            .ToListAsync(cancellationToken)).ToDictionary(l => l.Id, l => (l.Name, l.ParentId));
+
+        var locationsQuery = ownerLocationsQuery;
 
         if (query.LocationIds is { Count: > 0 })
             locationsQuery = locationsQuery.Where(l => query.LocationIds.Contains(l.Id));
 
         var raw = await locationsQuery
-            .Select(l => new { l.Id, l.Name, l.Code, l.ParentId })
+            .Select(l => new { l.Id, l.Name, l.Code })
             .ToListAsync(cancellationToken);
         
-        var locationMap = raw.ToDictionary(l => l.Id, l => (l.Name, l.ParentId));
-
         return raw
             .Select(l => new LocationBarcodeDto(
                 l.Id,

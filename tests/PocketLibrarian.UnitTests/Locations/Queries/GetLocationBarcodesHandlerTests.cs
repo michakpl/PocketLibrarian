@@ -211,17 +211,19 @@ public sealed class GetLocationBarcodesHandlerTests : IDisposable
     {
         var loc1 = Location.Create("Shelf A", "Top shelf", "SHELF-A", _ownerId);
         var loc2 = Location.Create("Shelf B", "Bottom shelf", "SHELF-B", _ownerId);
-        var loc3 = Location.Create("Shelf C", "Middle shelf", "SHELF-C", _ownerId);
+        var loc3 = Location.Create("Shelf C", "Middle shelf", "SHELF-C", _ownerId, loc2.Id);
         _db.Locations.AddRange(loc1, loc2, loc3);
         await _db.SaveChangesAsync();
 
         var result = await _handler.Handle(
-            new GetLocationBarcodesQuery(_ownerId, [loc1.Id, loc2.Id]),
+            new GetLocationBarcodesQuery(_ownerId, [loc1.Id, loc3.Id]),
             CancellationToken.None);
 
         Assert.Equal(2, result.Count);
         Assert.Contains(result, dto => dto.Id == loc1.Id);
-        Assert.Contains(result, dto => dto.Id == loc2.Id);
+        Assert.Contains(result, dto => dto.Id == loc3.Id);
+        var loc3Dto = result.Single(dto => dto.Id == loc3.Id);
+        Assert.Equal(["Shelf B", "Shelf C"], loc3Dto.LocationPath);
     }
 
     [Fact]

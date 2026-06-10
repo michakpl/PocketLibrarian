@@ -6,18 +6,15 @@ import BarcodeLabel from '@/components/BarcodeLabel'
 import PrintButton from '@/components/PrintButton'
 
 export default async function LocationBarcodesPage({
-  searchParams
+  searchParams,
 }: {
-  searchParams: Promise<{ ids: string[] }>
+  searchParams: Promise<{ ids?: string | string[] }>
 }) {
   const session = await getSession()
   if (!session) redirect('/auth')
 
   const { ids } = await searchParams
-  let parsedIds: string[] = ids
-  if (typeof ids === 'string') {
-    parsedIds = [ids]
-  }
+  const parsedIds = Array.isArray(ids) ? ids : ids ? [ids] : []
 
   let barcodes
   try {

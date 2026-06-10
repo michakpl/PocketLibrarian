@@ -23,7 +23,7 @@ export default function LocationsList({
       selectedLocationsIds.forEach(id => params.append('ids', id))
       url += `?${params.toString()}`
     }
-    window.open(url, '_blank')
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   return (
