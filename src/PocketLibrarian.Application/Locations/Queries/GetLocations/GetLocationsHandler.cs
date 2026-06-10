@@ -85,4 +85,3 @@ public sealed class GetLocationsHandler(IApplicationDbContext db)
         return path;
     }
 }
-

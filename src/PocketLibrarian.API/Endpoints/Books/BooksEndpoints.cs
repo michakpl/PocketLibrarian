@@ -104,4 +104,3 @@ internal sealed record AddBookRequest(string Title, string Author, string? Isbn1
 internal sealed record UpdateBookRequest(string Title, string Author, string? Isbn13, string? Isbn10, Guid? LocationId);
 
 internal sealed record AddBookFromIsbnRequest(string Isbn, Guid? LocationId);
-

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getLocations, getLocation, createLocation, updateLocation } from '@/lib/api/locations'
+import { getLocations, getLocation, createLocation, updateLocation, getLocationBarcodes } from '@/lib/api/locations'
 import type { AddLocationRequest, UpdateLocationRequest } from '@/lib/api/locations'
 import { UnauthorizedError } from '@/lib/api/errors'
 
@@ -286,6 +286,105 @@ describe('updateLocation', () => {
     const [, init] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
     expect(JSON.parse((init as RequestInit).body as string).parentId).toBe(bodyWithParent.parentId)
     expect(result.parentId).toBe(bodyWithParent.parentId)
+  })
+})
+
+const MOCK_BARCODES = [
+  {
+    id: 'a0000000-0000-4000-8000-000000000001',
+    name: 'Shelf A',
+    code: 'A001',
+    locationPath: ['Library', 'Shelf A'],
+  },
+  {
+    id: 'a0000000-0000-4000-8000-000000000002',
+    name: 'Row 1',
+    code: 'A1',
+    locationPath: ['Library', 'Shelf A', 'Row 1'],
+  },
+]
+
+describe('getLocationBarcodes', () => {
+  const ids = ['a0000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000002']
+
+  it('sends POST to /api/locations/barcodes with correct method, headers and body', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => MOCK_BARCODES,
+    })
+
+    await getLocationBarcodes('my-token', ids)
+
+    const [url, init] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(url).toBe('http://api.test/api/locations/barcodes')
+    expect((init as RequestInit).method).toBe('POST')
+    expect((init as RequestInit).headers).toMatchObject({
+      Authorization: 'Bearer my-token',
+      'Content-Type': 'application/json',
+    })
+    expect(JSON.parse((init as RequestInit).body as string)).toEqual({ ids })
+  })
+
+  it('returns array of LocationBarcodeDto on 200', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => MOCK_BARCODES,
+    })
+
+    const result = await getLocationBarcodes('token', ids)
+    expect(result).toHaveLength(2)
+    expect(result[0].name).toBe('Shelf A')
+    expect(result[0].code).toBe('A001')
+    expect(result[1].locationPath).toEqual(['Library', 'Shelf A', 'Row 1'])
+  })
+
+  it('sends ids array in the request body', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => [],
+    })
+
+    await getLocationBarcodes('token', ids)
+
+    const [, init] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    const body = JSON.parse((init as RequestInit).body as string)
+    expect(body.ids).toEqual(ids)
+  })
+
+  it('sends empty array when ids is empty', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => [],
+    })
+
+    await getLocationBarcodes('token', [])
+
+    const [, init] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    const body = JSON.parse((init as RequestInit).body as string)
+    expect(body.ids).toEqual([])
+  })
+
+  it('throws UnauthorizedError on 401', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 401 })
+    await expect(getLocationBarcodes('bad', ids)).rejects.toBeInstanceOf(UnauthorizedError)
+  })
+
+  it('throws generic Error on other non-ok status', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: 'Internal Server Error',
+    })
+    await expect(getLocationBarcodes('token', ids)).rejects.toThrow('Failed to fetch location barcodes')
+  })
+
+  it('throws if API_URL is not set', async () => {
+    vi.stubEnv('API_URL', '')
+    await expect(getLocationBarcodes('token', ids)).rejects.toThrow('API_URL')
   })
 })
 

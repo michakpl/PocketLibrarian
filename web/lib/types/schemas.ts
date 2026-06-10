@@ -1,5 +1,12 @@
 import { z } from 'zod'
 
+export const LocationBarcodeDtoSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  code: z.string(),
+  locationPath: z.array(z.string()),
+})
+
 export const LocationDtoSchema = z.object({
   id: z.uuid(),
   ownerId: z.uuid(),

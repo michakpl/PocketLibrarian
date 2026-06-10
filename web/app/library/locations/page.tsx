@@ -4,7 +4,7 @@ import {UnauthorizedError} from "@/lib/api/errors";
 import {getLocations} from "@/lib/api/locations";
 import Link from "next/link";
 import {Plus} from "lucide-react";
-import LocationNode from "@/components/LocationNode";
+import LocationsList from "@/components/LocationsList";
 
 interface Props {
     searchParams: Promise<{ page?: string; pageSize?: string }>
@@ -41,9 +41,7 @@ export default async function LocationPage(_: Props) {
                 </Link>
             </div>
 
-            {locations.map((location) => (
-                <LocationNode key={location.id} location={location}/>
-            ))}
+            <LocationsList locations={locations}/>
         </div>
     )
 }
