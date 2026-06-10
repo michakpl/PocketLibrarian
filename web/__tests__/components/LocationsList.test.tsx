@@ -91,7 +91,7 @@ describe('LocationsList — print action', () => {
   it('opens /library/locations/barcodes in a new tab when nothing is selected', () => {
     render(<LocationsList locations={MOCK_LOCATIONS} />)
     fireEvent.click(screen.getByRole('button', { name: /print barcodes/i }))
-    expect(window.open).toHaveBeenCalledWith('/library/locations/barcodes', '_blank')
+    expect(window.open).toHaveBeenCalledWith('/library/locations/barcodes', '_blank', 'noopener,noreferrer')
   })
 
   it('opens URL with ids query param for the selected location', () => {
